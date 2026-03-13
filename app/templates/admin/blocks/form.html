@@ -1,0 +1,38 @@
+{% extends 'shared/base.html' %}
+{% set breadcrumb = '대시보드 > 블록 관리 > ' ~ block.title %}
+{% block content %}
+<h1 class="page-title">블록 편집</h1>
+{% if errors %}<div class="card error-box">{% for e in errors %}<div>{{ e }}</div>{% endfor %}</div>{% endif %}
+<div class="split-2">
+<div class="card">
+<form method="post" action="/admin/blocks/{{ block.id }}/update">
+  <label>페이지</label><select name="page_id">{% for p in pages %}<option value="{{ p.id }}" {% if p.id==block.page_id %}selected{% endif %}>{{ p.title }}</option>{% endfor %}</select>
+  <input name="title" value="{{ block.title }}" required>
+  <input name="description" value="{{ block.description }}">
+  <label>타입</label><select name="block_type"><option value="markdown" {% if block.block_type=='markdown' %}selected{% endif %}>markdown</option><option value="python" {% if block.block_type=='python' %}selected{% endif %}>python</option><option value="sql" {% if block.block_type=='sql' %}selected{% endif %}>sql</option></select>
+  <label>소스 코드</label><textarea class="code-area mono" name="source_code_text">{{ block.source_code_text }}</textarea>
+  <label>config_json</label><textarea class="mono" name="config_json" rows="6">{{ block.config_json }}</textarea>
+  <label>params_schema_json</label><textarea class="mono" name="params_schema_json" rows="6">{{ block.params_schema_json }}</textarea>
+  <label>default_params_json</label><textarea class="mono" name="default_params_json" rows="4">{{ block.default_params_json }}</textarea>
+  <label><input type="checkbox" name="schedule_enabled" value="true" {% if block.schedule_enabled %}checked{% endif %}>스케줄 사용</label>
+  <input class="mono" name="schedule_cron" value="{{ block.schedule_cron or '0 7 * * *' }}">
+  <input name="sort_order" type="number" value="{{ block.sort_order }}">
+  <label><input type="checkbox" name="is_active" value="true" {% if block.is_active %}checked{% endif %}>활성</label>
+  <button type="submit">저장</button>
+</form>
+</div>
+<div class="card">
+  <h3>빠른 작업</h3>
+  <form method="post" action="/admin/blocks/{{ block.id }}/run"><textarea class="mono" name="run_params_json" rows="3">{{ block.default_params_json or '{}' }}</textarea><button {% if block.block_type=='markdown' %}disabled{% endif %}>수동 실행</button></form>
+  <form method="post" action="/admin/blocks/{{ block.id }}/preview"><textarea class="mono" name="run_params_json" rows="3">{{ block.default_params_json or '{}' }}</textarea><button {% if block.block_type=='markdown' %}disabled{% endif %}>시험 실행</button></form>
+  <div class="actions-row">
+    <form method="post" action="/admin/blocks/{{ block.id }}/clone"><button class="btn-secondary">복제</button></form>
+    <form method="post" action="/admin/blocks/{{ block.id }}/archive">{% if block.is_archived %}<input type="hidden" name="archive" value="false"><button class="btn-secondary">보관해제</button>{% else %}<button class="btn-warning">보관</button>{% endif %}</form>
+    <form method="post" action="/admin/blocks/{{ block.id }}/delete"><button class="btn-danger">보관/삭제</button></form>
+  </div>
+  {% include 'admin/blocks/_help_panel.html' %}
+  {% include 'admin/blocks/_params_schema_help.html' %}
+</div>
+</div>
+{% include 'admin/blocks/preview_result.html' %}
+{% endblock %}

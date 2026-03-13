@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title or '리포트 관리자 포털' }}</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/css/admin.css">
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <h2><a href="/admin" class="active">Admin</a></h2>
+    <a href="/admin">대시보드</a>
+    <a href="/admin/categories">카테고리 관리</a>
+    <a href="/admin/pages">리포트 관리</a>
+    <a href="/admin/blocks">블록 관리</a>
+    <a href="/admin/snapshots">스냅샷</a>
+    <a href="/admin/runs">실행 이력</a>
+    <a href="/admin/maintenance">유지보수</a>
+    <a href="#">설정(예정)</a>
+    <hr>
+    <a href="/view">사용자 조회 포털</a>
+  </aside>
+  <main class="content">
+    {% if breadcrumb %}<div class="breadcrumb">{{ breadcrumb|safe }}</div>{% endif %}
+    {% block content %}{% endblock %}
+  </main>
+</div>
+</body>
+</html>

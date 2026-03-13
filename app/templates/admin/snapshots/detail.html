@@ -1,0 +1,44 @@
+{% extends 'shared/base.html' %}
+{% block content %}
+<h1>스냅샷 상세 #{{ snapshot.id }}</h1>
+<div class="card">
+  <p>페이지: {{ snapshot.page.title }}</p>
+  <p>상태: {{ snapshot.status }} / run_type: {{ snapshot.run_type }} / trigger: {{ snapshot.trigger_source }}</p>
+  <p>시간: {{ snapshot.started_at }} ~ {{ snapshot.finished_at }} ({{ snapshot.duration_ms }} ms)</p>
+  <p>요약: {{ snapshot.summary }}</p>
+  <p>run_params_json: {{ snapshot.run_params_json }}</p>
+  <p>성공 {{ summary.success }} / 실패 {{ summary.failed }} / 스킵 {{ summary.skipped }}</p>
+  <div class="actions-row">
+    <form method="post" action="/admin/snapshots/{{ snapshot.id }}/rerun"><button type="submit">페이지 재실행</button></form>
+    <form method="post" action="/admin/snapshots/{{ snapshot.id }}/delete"><button class="btn-danger" type="submit">삭제</button></form>
+    <a class="btn btn-secondary" href="/view/{{ snapshot.page.category.slug }}/{{ snapshot.page.slug }}?snapshot_id={{ snapshot.id }}">사용자 화면 보기</a>
+  </div>
+</div>
+
+{% for bs in snapshot.block_snapshots %}
+<div class="card">
+  <h3>{{ bs.block.title }} ({{ bs.status }})</h3>
+  <p>summary: {{ bs.summary }}</p>
+  {% if bs.content_html %}<div class="result-box">{{ bs.content_html | safe }}</div>{% endif %}
+  {% if bs.content_text %}<pre>{{ bs.content_text }}</pre>{% endif %}
+  {% if bs.error_text %}<div class="error-box"><pre>{{ bs.error_text }}</pre></div>{% endif %}
+  <h4>첨부</h4>
+  <ul>
+    {% for a in bs.attachments %}
+      <li><a href="{% if a.block_snapshot_id is defined %}/attachments/snapshot/{{ a.id }}/download{% else %}/attachments/{{ a.id }}/download{% endif %}">{{ a.file_name }}</a> ({{ a.file_size }} bytes)</li>
+    {% else %}<li>없음</li>{% endfor %}
+  </ul>
+</div>
+{% endfor %}
+
+<div class="card">
+  <h3>직전 스냅샷 대비</h3>
+  <ul>
+    {% for row in compare_rows %}
+      <li>{{ row.block.title }}: {{ row.state }}</li>
+    {% else %}
+      <li>비교 데이터 없음</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

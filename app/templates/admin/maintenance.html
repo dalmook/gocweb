@@ -1,0 +1,20 @@
+{% extends 'shared/base.html' %}
+{% block content %}
+<h1>유지보수</h1>
+<div class="card">
+<form method="post" action="/admin/maintenance/cleanup">
+  <label>페이지별 유지 스냅샷 수</label><input type="number" name="keep_per_page" value="20">
+  <label>Temp 정리 기준(일)</label><input type="number" name="temp_days" value="30">
+  <button type="submit">정리 실행</button>
+</form>
+{% if result %}<pre>{{ result }}</pre>{% endif %}
+</div>
+<div class="card">
+  <h3>최근 실패 리포트</h3>
+  <ul>
+    {% for f in failures %}
+      <li>{{ f.started_at }} / {{ f.page_title }} / {{ f.block_title }} / {{ f.error_short }} <a href="/admin/snapshots/{{ f.snapshot_id }}">보기</a></li>
+    {% else %}<li>없음</li>{% endfor %}
+  </ul>
+</div>
+{% endblock %}

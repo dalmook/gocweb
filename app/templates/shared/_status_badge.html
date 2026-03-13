@@ -1,0 +1,2 @@
+{% set badge_value = (status or status_label or 'no-data') %}
+<span class="badge badge-{{ badge_value }}">{{ label or status_label or badge_value }}</span>

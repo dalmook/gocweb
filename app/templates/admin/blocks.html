@@ -1,0 +1,28 @@
+{% extends 'shared/base.html' %}
+{% set breadcrumb = '대시보드 > 블록 관리' %}
+{% block content %}
+<h1 class="page-title">블록 관리</h1>
+{% if message %}<div class="card">{{ message }}</div>{% endif %}
+<div class="card">
+<form class="toolbar" method="get">
+  <input name="q" value="{{ filters.q }}" placeholder="블록 검색">
+  <select name="block_type"><option value="all">타입 전체</option><option value="python" {% if filters.block_type=='python' %}selected{% endif %}>python</option><option value="sql" {% if filters.block_type=='sql' %}selected{% endif %}>sql</option><option value="markdown" {% if filters.block_type=='markdown' %}selected{% endif %}>markdown</option></select>
+  <select name="page_id"><option value="">페이지 전체</option>{% for p in pages %}<option value="{{ p.id }}" {% if filters.page_id==p.id %}selected{% endif %}>{{ p.title }}</option>{% endfor %}</select>
+  <select name="category_id"><option value="">카테고리 전체</option>{% for c in categories %}<option value="{{ c.id }}" {% if filters.category_id==c.id %}selected{% endif %}>{{ c.name }}</option>{% endfor %}</select>
+  <select name="active"><option value="all">활성 전체</option><option value="active" {% if filters.active=='active' %}selected{% endif %}>활성</option><option value="inactive" {% if filters.active=='inactive' %}selected{% endif %}>비활성</option></select>
+  <label><input type="checkbox" name="show_archived" value="true" {% if filters.show_archived %}checked{% endif %}>보관 포함</label>
+  <button>검색</button>
+</form>
+</div>
+<div class="card table-wrap"><table class="table">
+<thead><tr><th>제목</th><th>페이지</th><th>카테고리</th><th>타입</th><th>최근 실행</th><th>상태</th><th>빠른 액션</th></tr></thead>
+<tbody>
+{% for b in blocks %}
+<tr><td><a href="/admin/blocks/{{ b.id }}/edit">{{ b.title }}</a></td><td>{{ b.page.title }}</td><td>{{ b.page.category.name }}</td>
+<td><span class="badge badge-{{ b.block_type }}">{{ b.block_type }}</span></td>
+<td>{% set r=latest_map.get(b.id) %}{% if r %}{{ r.started_at }} / {{ r.status }}{% else %}-{% endif %}</td>
+<td>{% if b.is_archived %}<span class="badge badge-archived">보관</span>{% elif b.is_active %}<span class="badge badge-success">활성</span>{% else %}<span class="badge badge-inactive">비활성</span>{% endif %}</td>
+<td class="actions-row"><a class="btn btn-secondary" href="/admin/blocks/{{ b.id }}/edit">수정</a><form method="post" action="/admin/blocks/{{ b.id }}/run"><button {% if b.block_type=='markdown' %}disabled{% endif %}>실행</button></form><form method="post" action="/admin/blocks/{{ b.id }}/delete"><button class="btn-warning">보관/삭제</button></form></td></tr>
+{% else %}<tr><td colspan="7">데이터 없음</td></tr>{% endfor %}
+</tbody></table></div>
+{% endblock %}

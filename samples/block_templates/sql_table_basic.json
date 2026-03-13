@@ -1,0 +1,1 @@
+{"template_key":"sql_table_basic","block_type":"sql","source_code_text":"SELECT :target_month AS target_month FROM dual"}
