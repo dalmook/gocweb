@@ -5,8 +5,8 @@ from apscheduler.triggers.cron import CronTrigger
 from sqlalchemy import select
 
 from app.db import SessionLocal
-from app.models import ReportBlock, ReportPage
-from app.services.run_service import run_block, run_page_and_create_snapshot
+from app.models import ReportPage
+from app.services.run_service import run_page_and_create_snapshot
 
 scheduler = BackgroundScheduler()
 
@@ -29,16 +29,6 @@ def _run_page_job(page_id: int) -> None:
         db.close()
 
 
-def _run_block_job(block_id: int) -> None:
-    db = SessionLocal()
-    try:
-        run_block(db, block_id, run_type="scheduled")
-    except Exception:
-        pass
-    finally:
-        db.close()
-
-
 def register_jobs() -> None:
     scheduler.remove_all_jobs()
     db = SessionLocal()
@@ -55,18 +45,6 @@ def register_jobs() -> None:
                 kwargs={"page_id": p.id},
             )
 
-        # backward compatibility for block schedule
-        blocks = db.scalars(
-            select(ReportBlock).where(ReportBlock.schedule_enabled.is_(True), ReportBlock.is_active.is_(True), ReportBlock.is_archived.is_(False))
-        ).all()
-        for block in blocks:
-            scheduler.add_job(
-                _run_block_job,
-                trigger=_parse_cron_5(block.schedule_cron),
-                id=f"block-{block.id}",
-                replace_existing=True,
-                kwargs={"block_id": block.id},
-            )
     finally:
         db.close()
 

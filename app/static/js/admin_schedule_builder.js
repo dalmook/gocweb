@@ -2,7 +2,11 @@ function toggleScheduleFields(rootId){
   const root=document.getElementById(rootId); if(!root) return;
   const kind=root.querySelector('[name=schedule_kind]').value;
   root.querySelectorAll('[data-schedule-kind]').forEach(el=>{
-    el.style.display = el.dataset.scheduleKind===kind ? 'block':'none';
+    const active = el.dataset.scheduleKind===kind;
+    el.style.display = active ? 'block':'none';
+    el.querySelectorAll('input,select,textarea').forEach(inp=>{
+      inp.disabled = !active;
+    });
   });
 }
 document.addEventListener('change',(e)=>{

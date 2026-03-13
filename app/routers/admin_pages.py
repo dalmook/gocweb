@@ -21,6 +21,7 @@ from app.services.admin_ops import (
     set_archive_state,
 )
 from app.services.run_service import block_latest_run, get_latest_snapshot_for_page, get_snapshots_for_page, page_latest_run, run_page_and_create_snapshot
+from app.services.scheduler import register_jobs
 
 router = APIRouter(prefix="/admin/pages", tags=["admin-pages"])
 templates = Jinja2Templates(directory="app/templates")
@@ -140,6 +141,7 @@ def create_page(
         page.schedule_cron = schedule["cron"]
         page.schedule_meta_json = json.dumps(schedule["meta"], ensure_ascii=False)
         db.commit()
+        register_jobs()
         return RedirectResponse(f"/admin/pages/{page.id}", status_code=303)
 
     if not slug:
@@ -164,6 +166,7 @@ def create_page(
         )
     )
     db.commit()
+    register_jobs()
     return RedirectResponse("/admin/pages", status_code=303)
 
 
@@ -206,7 +209,15 @@ def update_page(
     p.schedule_kind = schedule["kind"]
     p.schedule_cron = schedule["cron"]
     p.schedule_meta_json = json.dumps(schedule["meta"], ensure_ascii=False)
+
+    # 블록 스케줄은 리포트 스케줄에 종속(직접 스케줄링은 사용하지 않음)
+    blocks = db.scalars(select(ReportBlock).where(ReportBlock.page_id == p.id)).all()
+    for b in blocks:
+        b.schedule_enabled = False
+        b.schedule_cron = p.schedule_cron or ""
+
     db.commit()
+    register_jobs()
     return RedirectResponse(f"/admin/pages/{page_id}", status_code=303)
 
 
@@ -232,6 +243,7 @@ def page_detail(page_id: int, request: Request, msg: str | None = Query(default=
     if not page:
         raise HTTPException(status_code=404)
     blocks = db.scalars(select(ReportBlock).where(ReportBlock.page_id == page_id).order_by(ReportBlock.sort_order.asc(), ReportBlock.id.asc())).all()
+    categories = db.scalars(select(Category).where(Category.is_archived.is_(False)).order_by(Category.sort_order.asc(), Category.id.asc())).all()
     latest_map = {b.id: block_latest_run(db, b.id) for b in blocks}
     snapshots = get_snapshots_for_page(db, page_id, 10)
     page_schedule = describe_schedule(page.schedule_enabled, page.schedule_kind, page.schedule_cron, page.schedule_meta_json)
@@ -242,6 +254,7 @@ def page_detail(page_id: int, request: Request, msg: str | None = Query(default=
             "request": request,
             "page": page,
             "blocks": blocks,
+            "categories": categories,
             "latest_map": latest_map,
             "page_latest": page_latest_run(db, page_id),
             "latest_snapshot": get_latest_snapshot_for_page(db, page_id),

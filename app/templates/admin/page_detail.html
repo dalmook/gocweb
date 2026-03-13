@@ -30,7 +30,12 @@
   <div class="card">
     <h3>리포트 수정</h3>
     <form id="pageScheduleForm" data-schedule-form method="post" action="/admin/pages/{{ page.id }}/update">
-      <input type="hidden" name="category_id" value="{{ page.category_id }}">
+      <label>카테고리</label>
+      <select name="category_id">
+        {% for c in categories %}
+          <option value="{{ c.id }}" {% if c.id == page.category_id %}selected{% endif %}>{{ c.name }}</option>
+        {% endfor %}
+      </select>
       <label>리포트명</label><input name="title" value="{{ page.title }}" required>
       <label>설명</label><textarea name="description" rows="3">{{ page.description }}</textarea>
       <label>스케줄</label>
