@@ -14,8 +14,7 @@
   <label>config_json</label><textarea class="mono" name="config_json" rows="6">{{ block.config_json }}</textarea>
   <label>params_schema_json</label><textarea class="mono" name="params_schema_json" rows="6">{{ block.params_schema_json }}</textarea>
   <label>default_params_json</label><textarea class="mono" name="default_params_json" rows="4">{{ block.default_params_json }}</textarea>
-  <label><input type="checkbox" name="schedule_enabled" value="true" {% if block.schedule_enabled %}checked{% endif %}>스케줄 사용</label>
-  <input class="mono" name="schedule_cron" value="{{ block.schedule_cron or '0 7 * * *' }}">
+  <p class="muted">블록 개별 스케줄은 사용하지 않습니다. 리포트 스케줄을 사용하세요.</p>
   <input name="sort_order" type="number" value="{{ block.sort_order }}">
   <label><input type="checkbox" name="is_active" value="true" {% if block.is_active %}checked{% endif %}>활성</label>
   <button type="submit">저장</button>

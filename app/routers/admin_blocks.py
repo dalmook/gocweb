@@ -97,13 +97,12 @@ def create_block(
     config_json: str = Form("{}"),
     params_schema_json: str = Form("[]"),
     default_params_json: str = Form("{}"),
-    schedule_enabled: bool = Form(False),
-    schedule_cron: str = Form("0 7 * * *"),
     sort_order: int = Form(0),
     is_active: bool = Form(False),
     db: Session = Depends(get_db),
 ):
-    errors = validate_block_payload(config_json, params_schema_json, default_params_json, schedule_cron)
+    # 스케줄은 리포트(page) 기준으로만 운영. 블록 개별 스케줄은 비활성 고정.
+    errors = validate_block_payload(config_json, params_schema_json, default_params_json, None)
     if errors:
         return RedirectResponse(f"/admin/pages/{page_id}?msg={quote_plus(errors[0])}", status_code=303)
 
@@ -116,8 +115,8 @@ def create_block(
         config_json=config_json,
         params_schema_json=params_schema_json,
         default_params_json=default_params_json,
-        schedule_enabled=schedule_enabled,
-        schedule_cron=schedule_cron,
+        schedule_enabled=False,
+        schedule_cron="",
         sort_order=sort_order,
         is_active=is_active,
     )
@@ -125,7 +124,8 @@ def create_block(
     db.commit()
     db.refresh(b)
     register_jobs()
-    return RedirectResponse(f"/admin/blocks/{b.id}/edit", status_code=303)
+    # 블록 추가 후 바로 페이지로 복귀 (추가 설정 화면 이동 제거)
+    return RedirectResponse(f"/admin/pages/{b.page_id}?msg={quote_plus('블록이 추가되었습니다.')}", status_code=303)
 
 
 @router.post("/{block_id}/update")
@@ -139,8 +139,6 @@ def update_block(
     config_json: str = Form("{}"),
     params_schema_json: str = Form("[]"),
     default_params_json: str = Form("{}"),
-    schedule_enabled: bool = Form(False),
-    schedule_cron: str = Form("0 7 * * *"),
     sort_order: int = Form(0),
     is_active: bool = Form(False),
     db: Session = Depends(get_db),
@@ -148,7 +146,7 @@ def update_block(
     b = db.get(ReportBlock, block_id)
     if not b:
         raise HTTPException(status_code=404)
-    errors = validate_block_payload(config_json, params_schema_json, default_params_json, schedule_cron)
+    errors = validate_block_payload(config_json, params_schema_json, default_params_json, None)
     if errors:
         return RedirectResponse(f"/admin/blocks/{block_id}/edit?msg={quote_plus(errors[0])}", status_code=303)
 
@@ -160,8 +158,9 @@ def update_block(
     b.config_json = config_json
     b.params_schema_json = params_schema_json
     b.default_params_json = default_params_json
-    b.schedule_enabled = schedule_enabled
-    b.schedule_cron = schedule_cron
+    # 스케줄은 리포트(page) 기준으로만 운영. 블록 개별 스케줄은 비활성 고정.
+    b.schedule_enabled = False
+    b.schedule_cron = ""
     b.sort_order = sort_order
     b.is_active = is_active
     db.commit()
