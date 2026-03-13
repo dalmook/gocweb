@@ -1,23 +1,45 @@
 {% extends 'base.html' %}
 {% block content %}
 <h1>메인 화면</h1>
+<div class="stat-grid">
+  <div class="card"><h3>카테고리</h3><p>{{ total_categories }}</p></div>
+  <div class="card"><h3>페이지</h3><p>{{ total_pages }}</p></div>
+  <div class="card"><h3>블록</h3><p>{{ total_blocks }}</p></div>
+</div>
+
 <div class="card">
-  <h3>카테고리</h3>
+  <h3>최근 실패 실행 5건</h3>
   <ul>
-  {% for c in categories %}
-    <li><a href="/categories/{{ c.id }}">{{ c.name }}</a> (페이지 {{ page_counts.get(c.id, 0) }}개)</li>
+  {% for run in recent_failed %}
+    <li><a href="/runs/{{ run.id }}">#{{ run.id }}</a> {{ run.block.title }} / {{ run.summary }}</li>
+  {% else %}
+    <li>실패 이력 없음</li>
   {% endfor %}
   </ul>
 </div>
+
 <div class="card">
-  <h3>최근 실행</h3>
+  <h3>최근 업데이트된 페이지</h3>
   <ul>
-  {% for run in latest_runs %}
-    <li><a href="/runs/{{ run.id }}">#{{ run.id }}</a> - {{ run.summary }}
-      <span class="badge {{ run.status }}">{{ run.status }}</span></li>
+  {% for p in recent_updated_pages %}
+    <li><a href="/pages/{{ p.id }}">{{ p.title }}</a> ({{ p.updated_at }})</li>
   {% else %}
-    <li>아직 실행 이력 없음</li>
+    <li>페이지 없음</li>
   {% endfor %}
   </ul>
+</div>
+
+<div class="card">
+  <h3>카테고리별 페이지 바로가기</h3>
+  {% for c in categories %}
+    <h4>{{ c.name }} ({{ page_counts.get(c.id, 0) }}개)</h4>
+    <ul>
+      {% for p in c.pages %}
+      <li><a href="/pages/{{ p.id }}">{{ p.title }}</a></li>
+      {% else %}
+      <li>페이지 없음</li>
+      {% endfor %}
+    </ul>
+  {% endfor %}
 </div>
 {% endblock %}

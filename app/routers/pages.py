@@ -1,15 +1,17 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Request
+from urllib.parse import quote_plus
+
+from fastapi import APIRouter, Depends, Form, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db import get_db
-from app.models import Block, Category, Page, RunHistory
-from app.services.executor import execute_page_blocks
-from app.services.renderers import markdown_to_html, text_to_pre
+from app.models import Category, Page
+from app.services.renderers import markdown_to_html, run_content_html
+from app.services.reporting import get_page_dashboard_data, run_page
 
 router = APIRouter(prefix="/pages", tags=["pages"])
 templates = Jinja2Templates(directory="app/templates")
@@ -39,20 +41,47 @@ def page_create(
 
 
 @router.get("/{page_id}", response_class=HTMLResponse)
-def page_detail(page_id: int, request: Request, db: Session = Depends(get_db)):
-    page = db.get(Page, page_id)
-    if not page:
+def page_detail(
+    page_id: int,
+    request: Request,
+    msg: str | None = Query(default=None),
+    db: Session = Depends(get_db),
+):
+    try:
+        data = get_page_dashboard_data(db, page_id)
+    except ValueError:
         raise HTTPException(status_code=404)
+
+    page = data["page"]
     categories = db.scalars(select(Category).order_by(Category.sort_order.asc())).all()
-    blocks = db.scalars(select(Block).where(Block.page_id == page_id).order_by(Block.sort_order.asc(), Block.id.asc())).all()
-    latest_map = {}
-    for block in blocks:
-        latest_map[block.id] = db.scalars(
-            select(RunHistory).where(RunHistory.block_id == block.id).order_by(RunHistory.started_at.desc()).limit(1)
-        ).first()
+
+    for card in data["cards"]:
+        block = card["block"]
+        preferred = card["preferred_run"]
+        latest = card["latest_any"]
+        if block.block_type == "markdown":
+            card["display_html"] = markdown_to_html(block.source_code_text)
+        else:
+            card["display_html"] = run_content_html(preferred)
+        if latest:
+            card["status"] = latest.status
+            card["last_run_at"] = latest.finished_at
+            card["duration_ms"] = latest.duration_ms
+        else:
+            card["status"] = "never-run"
+            card["last_run_at"] = None
+            card["duration_ms"] = None
+
     return templates.TemplateResponse(
         "pages/detail.html",
-        {"request": request, "page": page, "categories": categories, "blocks": blocks, "latest_map": latest_map},
+        {
+            "request": request,
+            "page": page,
+            "categories": categories,
+            "cards": data["cards"],
+            "summary": data["summary"],
+            "message": msg,
+        },
     )
 
 
@@ -77,7 +106,7 @@ def page_update(
     page.sort_order = sort_order
     page.is_active = is_active
     db.commit()
-    return RedirectResponse(f"/pages/{page_id}", status_code=303)
+    return RedirectResponse(f"/pages/{page_id}?msg={quote_plus('페이지 정보를 저장했습니다')}", status_code=303)
 
 
 @router.post("/{page_id}/delete")
@@ -92,35 +121,34 @@ def page_delete(page_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/{page_id}/run")
-def run_page(page_id: int, db: Session = Depends(get_db)):
-    execute_page_blocks(db, page_id, run_type="manual")
-    return RedirectResponse(f"/pages/{page_id}", status_code=303)
+def run_page_all(page_id: int, db: Session = Depends(get_db)):
+    try:
+        result = run_page(db, page_id, run_type="manual")
+    except ValueError:
+        raise HTTPException(status_code=404)
+    msg = f"페이지 실행 완료: 총 {result['total']}개, 성공 {result['success']}개, 실패 {result['failed']}개"
+    return RedirectResponse(f"/pages/{page_id}?msg={quote_plus(msg)}", status_code=303)
 
 
 @router.get("/{page_id}/result", response_class=HTMLResponse)
 def page_result(page_id: int, request: Request, db: Session = Depends(get_db)):
-    page = db.get(Page, page_id)
-    if not page:
+    try:
+        data = get_page_dashboard_data(db, page_id)
+    except ValueError:
         raise HTTPException(status_code=404)
-    blocks = db.scalars(select(Block).where(Block.page_id == page_id).order_by(Block.sort_order.asc(), Block.id.asc())).all()
+
     rendered_blocks = []
-    for block in blocks:
-        latest_success = db.scalars(
-            select(RunHistory)
-            .where(RunHistory.block_id == block.id, RunHistory.status == "success")
-            .order_by(RunHistory.started_at.desc())
-            .limit(1)
-        ).first()
-        latest_any = db.scalars(
-            select(RunHistory).where(RunHistory.block_id == block.id).order_by(RunHistory.started_at.desc()).limit(1)
-        ).first()
+    for card in data["cards"]:
+        block = card["block"]
+        preferred = card["preferred_run"]
+        latest_any = card["latest_any"]
         if block.block_type == "markdown":
             html = markdown_to_html(block.source_code_text)
-        elif latest_success and latest_success.content_html:
-            html = latest_success.content_html
-        elif latest_success and latest_success.content_text:
-            html = text_to_pre(latest_success.content_text)
         else:
-            html = "<p>아직 실행 결과 없음</p>"
+            html = run_content_html(preferred)
         rendered_blocks.append({"block": block, "html": html, "latest_any": latest_any})
-    return templates.TemplateResponse("pages/result.html", {"request": request, "page": page, "rendered_blocks": rendered_blocks})
+
+    return templates.TemplateResponse(
+        "pages/result.html",
+        {"request": request, "page": data["page"], "rendered_blocks": rendered_blocks},
+    )

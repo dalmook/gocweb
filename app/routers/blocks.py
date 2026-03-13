@@ -1,12 +1,14 @@
 from __future__ import annotations
 
+from urllib.parse import quote_plus
+
 from fastapi import APIRouter, Depends, Form, HTTPException
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.models import Block
-from app.services.executor import execute_block
+from app.services.reporting import run_block
 from app.services.scheduler import register_jobs
 
 router = APIRouter(prefix="/blocks", tags=["blocks"])
@@ -39,7 +41,7 @@ def block_create(
     db.add(block)
     db.commit()
     register_jobs()
-    return RedirectResponse(f"/pages/{page_id}", status_code=303)
+    return RedirectResponse(f"/pages/{page_id}?msg={quote_plus('블록을 추가했습니다')}", status_code=303)
 
 
 @router.post("/{block_id}/update")
@@ -68,7 +70,7 @@ def block_update(
     block.is_active = is_active
     db.commit()
     register_jobs()
-    return RedirectResponse(f"/pages/{block.page_id}", status_code=303)
+    return RedirectResponse(f"/pages/{block.page_id}?msg={quote_plus('블록을 수정했습니다')}", status_code=303)
 
 
 @router.post("/{block_id}/delete")
@@ -76,7 +78,7 @@ def block_delete(block_id: int, db: Session = Depends(get_db)):
     block = db.get(Block, block_id)
     redirect_to = "/"
     if block:
-        redirect_to = f"/pages/{block.page_id}"
+        redirect_to = f"/pages/{block.page_id}?msg={quote_plus('블록을 삭제했습니다')}"
         db.delete(block)
         db.commit()
         register_jobs()
@@ -88,5 +90,6 @@ def block_run(block_id: int, db: Session = Depends(get_db)):
     block = db.get(Block, block_id)
     if not block:
         raise HTTPException(status_code=404)
-    run = execute_block(db, block, run_type="manual")
-    return RedirectResponse(f"/runs/{run.id}", status_code=303)
+    run = run_block(db, block_id, run_type="manual")
+    msg = quote_plus(f"블록 실행 완료: {run.status} / {run.summary}")
+    return RedirectResponse(f"/pages/{block.page_id}?msg={msg}", status_code=303)
