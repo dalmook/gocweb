@@ -16,6 +16,7 @@ from app.routers import (
     admin_home,
     admin_pages,
     admin_runs,
+    admin_snapshots,
     attachments,
     view_portal,
 )
@@ -72,6 +73,7 @@ app.include_router(admin_categories.router)
 app.include_router(admin_pages.router)
 app.include_router(admin_blocks.router)
 app.include_router(admin_runs.router)
+app.include_router(admin_snapshots.router)
 app.include_router(attachments.router)
 app.include_router(view_portal.router)
 

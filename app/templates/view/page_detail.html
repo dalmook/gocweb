@@ -7,25 +7,33 @@
   <p class="muted">최근 전체 갱신: {{ latest_update or '없음' }}</p>
   {% if page_status == '정상' %}{% set status_label='정상' %}{% set status_class='success' %}
   {% elif page_status == '일부 실패' %}{% set status_label='일부 실패' %}{% set status_class='failed' %}
-  {% elif page_status == '최근 갱신 전' %}{% set status_label='최근 갱신 전' %}{% set status_class='info' %}
+  {% elif page_status == '실패' %}{% set status_label='실패' %}{% set status_class='failed' %}
   {% else %}{% set status_label='결과 없음' %}{% set status_class='no-data' %}
   {% endif %}
   {% include 'view/_status_badge.html' %}
-
-  <form method="get" class="history-select">
-    <label>조회 기준 실행 이력</label>
-    <select name="run_id" onchange="this.form.submit()">
-      <option value="">최신 기준</option>
-      {% for h in history %}
-      <option value="{{ h.id }}" {% if selected_run_id == h.id %}selected{% endif %}>#{{ h.id }} | {{ h.started_at }} | {{ h.block.title }} | {{ h.status }}</option>
-      {% endfor %}
-    </select>
-  </form>
+  {% if selected_snapshot %}
+  <a class="btn btn-secondary" href="/view/{{ page.category.slug }}/{{ page.slug }}/print?snapshot_id={{ selected_snapshot.id }}">인쇄용 보기</a>
+  {% endif %}
 </div>
+
+{% if snapshots %}
+  {% include 'view/_snapshot_selector.html' %}
+{% else %}
+  <div class="card">공식 스냅샷이 아직 없습니다. (관리자 실행 후 조회 가능)</div>
+{% endif %}
 
 {% for br in block_results %}
   {% include 'view/_block_card.html' %}
 {% else %}
   <div class="card">표시할 블록이 없습니다.</div>
 {% endfor %}
+
+<script>
+function copyText(id){
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.select();
+  document.execCommand('copy');
+}
+</script>
 {% endblock %}

@@ -8,6 +8,8 @@
   <input name="slug" placeholder="slug" required>
   <input name="description" placeholder="설명">
   <input name="sort_order" type="number" value="0">
+  <label><input type="checkbox" name="schedule_enabled" value="true">페이지 스케줄 사용</label>
+  <input name="schedule_cron" value="0 7 * * *">
   <label><input type="checkbox" name="is_active" value="true" checked>활성</label>
   <button type="submit">생성</button>
 </form>
@@ -20,11 +22,14 @@
     <input name="slug" value="{{ p.slug }}">
     <input name="description" value="{{ p.description }}">
     <input name="sort_order" type="number" value="{{ p.sort_order }}">
+    <label><input type="checkbox" name="schedule_enabled" value="true" {% if p.schedule_enabled %}checked{% endif %}>페이지 스케줄 사용</label>
+    <input name="schedule_cron" value="{{ p.schedule_cron or '0 7 * * *' }}">
     <label><input type="checkbox" name="is_active" value="true" {% if p.is_active %}checked{% endif %}>활성</label>
     <p>블록 수: {{ block_counts.get(p.id, 0) }}</p>
     <button type="submit">저장</button>
   </form>
   <a class="btn btn-secondary" href="/admin/pages/{{ p.id }}">상세 보기</a>
+  <a class="btn btn-secondary" href="/admin/snapshots/page/{{ p.id }}">스냅샷 목록</a>
   <form method="post" action="/admin/pages/{{ p.id }}/delete"><button class="btn-danger" type="submit">삭제</button></form>
 </div>
 {% endfor %}

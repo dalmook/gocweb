@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -7,7 +8,16 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db import ARTIFACTS_DIR
-from app.models import Attachment, Category, ReportBlock, ReportPage, RunHistory
+from app.models import (
+    Attachment,
+    BlockSnapshot,
+    Category,
+    PageSnapshot,
+    ReportBlock,
+    ReportPage,
+    RunHistory,
+    SnapshotAttachment,
+)
 
 
 def seed_sample_data(db: Session) -> None:
@@ -26,6 +36,8 @@ def seed_sample_data(db: Session) -> None:
         description="관리자가 실행/운영하는 출하 리포트",
         sort_order=1,
         is_active=True,
+        schedule_enabled=True,
+        schedule_cron="0 7 * * *",
     )
     p2 = ReportPage(
         category_id=ops.id,
@@ -34,6 +46,8 @@ def seed_sample_data(db: Session) -> None:
         description="운영성 점검용 리포트",
         sort_order=1,
         is_active=True,
+        schedule_enabled=True,
+        schedule_cron="30 7 * * *",
     )
     db.add_all([p1, p2])
     db.flush()
@@ -109,6 +123,77 @@ def seed_sample_data(db: Session) -> None:
     db.add(
         Attachment(
             run_history_id=py_run.id,
+            file_name=f1.name,
+            stored_path=str(f1),
+            mime_type="text/plain",
+            file_size=f1.stat().st_size,
+        )
+    )
+
+    # snapshot samples
+    s1 = PageSnapshot(
+        page_id=p1.id,
+        snapshot_key=f"seed-{p1.id}-{(now - timedelta(hours=2)).strftime('%Y%m%d-%H%M%S')}",
+        snapshot_date=(now - timedelta(hours=2)).date(),
+        run_type="scheduled",
+        status="success",
+        summary="전체 성공 (1/1)",
+        started_at=now - timedelta(hours=2),
+        finished_at=now - timedelta(hours=2) + timedelta(seconds=1),
+        duration_ms=1000,
+        is_published=True,
+        trigger_source="scheduler",
+    )
+    s2 = PageSnapshot(
+        page_id=p2.id,
+        snapshot_key=f"seed-{p2.id}-{(now - timedelta(hours=1)).strftime('%Y%m%d-%H%M%S')}",
+        snapshot_date=(now - timedelta(hours=1)).date(),
+        run_type="scheduled",
+        status="failed",
+        summary="전체 실패 (1/1)",
+        started_at=now - timedelta(hours=1),
+        finished_at=now - timedelta(hours=1) + timedelta(seconds=2),
+        duration_ms=2000,
+        is_published=True,
+        trigger_source="scheduler",
+    )
+    db.add_all([s1, s2])
+    db.flush()
+
+    bs1 = BlockSnapshot(
+        page_snapshot_id=s1.id,
+        block_id=b2.id,
+        status="success",
+        summary=py_run.summary,
+        content_html=py_run.content_html,
+        content_text=py_run.content_text,
+        error_text="",
+        started_at=py_run.started_at,
+        finished_at=py_run.finished_at,
+        duration_ms=py_run.duration_ms,
+        content_hash=hashlib.sha256((py_run.content_html + py_run.content_text).encode("utf-8")).hexdigest(),
+        summary_hash=hashlib.sha256(py_run.summary.encode("utf-8")).hexdigest(),
+    )
+    bs2 = BlockSnapshot(
+        page_snapshot_id=s2.id,
+        block_id=b3.id,
+        status="failed",
+        summary=sql_run.summary,
+        content_html="",
+        content_text="",
+        error_text=sql_run.error_text,
+        started_at=sql_run.started_at,
+        finished_at=sql_run.finished_at,
+        duration_ms=sql_run.duration_ms,
+        content_hash=hashlib.sha256("".encode("utf-8")).hexdigest(),
+        summary_hash=hashlib.sha256(sql_run.summary.encode("utf-8")).hexdigest(),
+    )
+    db.add_all([bs1, bs2])
+    db.flush()
+
+    db.add(
+        SnapshotAttachment(
+            block_snapshot_id=bs1.id,
             file_name=f1.name,
             stored_path=str(f1),
             mime_type="text/plain",

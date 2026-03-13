@@ -35,3 +35,7 @@ pre { white-space: pre-wrap; word-break: break-word; }
 .breadcrumb { font-size: 13px; color: #475569; margin-bottom: 10px; }
 .history-select { max-width: 420px; margin-top: 8px; }
 .muted { color: #6b7280; }
+
+.copy-source { position: absolute; left: -9999px; top: -9999px; }
+.summary-highlight { background:#eff6ff; padding:6px 8px; border-left:4px solid #3b82f6; }
+@media print { .view-header, .history-select, .btn, .sidebar { display:none !important; } .layout, .view-wrap { max-width:100%; margin:0; padding:0; } .card { break-inside: avoid; border-color:#ddd; } }
