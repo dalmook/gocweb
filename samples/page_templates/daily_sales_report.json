@@ -1,0 +1,39 @@
+{
+  "template_key": "daily_sales_report",
+  "title": "일일 매출 리포트",
+  "description": "일일 매출 요약 페이지 템플릿",
+  "schedule_enabled": true,
+  "schedule_cron": "0 7 * * *",
+  "blocks": [
+    {
+      "title": "안내",
+      "description": "리포트 안내",
+      "block_type": "markdown",
+      "source_code_text": "# 일일 매출 리포트\n- 매일 오전 실행\n- 관리자 파라미터 실행 가능",
+      "sort_order": 1,
+      "is_active": true
+    },
+    {
+      "title": "매출 SQL",
+      "description": "매출 집계 SQL",
+      "block_type": "sql",
+      "source_code_text": "SELECT :target_month AS target_month, :site_id AS site_id FROM dual",
+      "config_json": {
+        "dsn": "",
+        "user_env": "ORACLE_USER",
+        "pw_env": "ORACLE_PASSWORD",
+        "max_rows_preview": 200
+      },
+      "params_schema_json": [
+        {"name": "target_month", "label": "대상월", "type": "text", "required": false},
+        {"name": "site_id", "label": "사이트", "type": "text", "required": false}
+      ],
+      "default_params_json": {
+        "target_month": "202603",
+        "site_id": "HA01-01"
+      },
+      "sort_order": 2,
+      "is_active": true
+    }
+  ]
+}

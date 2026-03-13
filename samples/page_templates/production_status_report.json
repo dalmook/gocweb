@@ -1,0 +1,27 @@
+{
+  "template_key": "production_status_report",
+  "title": "생산 현황 리포트",
+  "description": "생산 지표 템플릿",
+  "blocks": [
+    {
+      "title": "생산 안내",
+      "description": "안내",
+      "block_type": "markdown",
+      "source_code_text": "## 생산 현황\n라인별 생산량 확인",
+      "sort_order": 1,
+      "is_active": true
+    },
+    {
+      "title": "생산 Python",
+      "description": "Python HTML 예시",
+      "block_type": "python",
+      "source_code_text": "def main(env):\n    p = env.get('params', {})\n    month = p.get('target_month','N/A')\n    return {'summary': f'생산 요약 {month}', 'html': f'<h3>생산 요약 {month}</h3>'}",
+      "params_schema_json": [
+        {"name": "target_month", "label": "대상월", "type": "text", "required": false}
+      ],
+      "default_params_json": {"target_month": "202603"},
+      "sort_order": 2,
+      "is_active": true
+    }
+  ]
+}

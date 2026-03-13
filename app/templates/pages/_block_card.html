@@ -1,0 +1,54 @@
+<div class="card block-card">
+  <div class="card-head">
+    <div>
+      <h3>{{ card.block.title }}</h3>
+      <div class="meta-row">
+        <span class="type-badge type-{{ card.block.block_type }}">{{ card.block.block_type }}</span>
+        {% set status_value = card.status %}
+        {% include 'shared/_status_badge.html' %}
+        <span class="muted">마지막 실행: {{ card.last_run_at or '없음' }}</span>
+        <span class="muted">소요: {{ card.duration_ms if card.duration_ms is not none else '-' }} ms</span>
+      </div>
+    </div>
+    <div class="actions-row">
+      {% if card.block.block_type != 'markdown' %}
+      <form method="post" action="/blocks/{{ card.block.id }}/run"><button type="submit">실행</button></form>
+      {% endif %}
+      <a class="btn btn-secondary" href="/runs?block_id={{ card.block.id }}">이력 보기</a>
+      <button type="button" class="btn btn-secondary" onclick="toggleBlock('block-body-{{ card.block.id }}')">접기/펼치기</button>
+    </div>
+  </div>
+
+  <div class="block-editor">
+    <form method="post" action="/blocks/{{ card.block.id }}/update">
+      <input name="title" value="{{ card.block.title }}" required>
+      <select name="block_type">
+        <option value="markdown" {% if card.block.block_type=='markdown' %}selected{% endif %}>markdown</option>
+        <option value="python" {% if card.block.block_type=='python' %}selected{% endif %}>python</option>
+        <option value="sql" {% if card.block.block_type=='sql' %}selected{% endif %}>sql</option>
+      </select>
+      <textarea name="source_code_text" rows="8">{{ card.block.source_code_text }}</textarea>
+      <textarea name="config_json" rows="4">{{ card.block.config_json }}</textarea>
+      <label><input type="checkbox" name="schedule_enabled" value="true" {% if card.block.schedule_enabled %}checked{% endif %}>스케줄 사용</label>
+      <input name="schedule_cron" value="{{ card.block.schedule_cron or '0 7 * * *' }}">
+      <input name="sort_order" type="number" value="{{ card.block.sort_order }}">
+      <label><input type="checkbox" name="is_active" value="true" {% if card.block.is_active %}checked{% endif %}>활성</label>
+      <button type="submit">수정 저장</button>
+    </form>
+    <form method="post" action="/blocks/{{ card.block.id }}/delete" onsubmit="return confirm('삭제할까요?')">
+      <button type="submit" class="btn-danger">삭제</button>
+    </form>
+  </div>
+
+  <div id="block-body-{{ card.block.id }}" class="block-result-wrap">
+    {% if card.preferred_run and card.preferred_run.summary %}
+      <p class="summary-line">요약: {{ card.preferred_run.summary }}</p>
+    {% endif %}
+    <div class="result-box">{{ card.display_html | safe }}</div>
+    {% if card.latest_any and card.latest_any.status == 'failed' and card.latest_any.error_text %}
+      <div class="error-box"><pre>{{ card.latest_any.error_text }}</pre></div>
+    {% endif %}
+    {% set attachments = card.attachments %}
+    {% include 'shared/_attachments.html' %}
+  </div>
+</div>

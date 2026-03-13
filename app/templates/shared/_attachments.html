@@ -1,0 +1,8 @@
+<h4>첨부파일</h4>
+<ul>
+{% for a in attachments %}
+  <li>{{ a.file_name }} ({{ a.file_size }} bytes) <a class="btn btn-sm" href="/attachments/{{ a.id }}/download">다운로드</a></li>
+{% else %}
+  <li>첨부 없음</li>
+{% endfor %}
+</ul>
