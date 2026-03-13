@@ -1,0 +1,18 @@
+{% extends 'shared/base.html' %}
+{% block content %}
+<h1>관리자 대시보드</h1>
+<div class="stat-grid">
+  <div class="card">카테고리: {{ counts.categories }}</div>
+  <div class="card">리포트 페이지: {{ counts.pages }}</div>
+  <div class="card">블록: {{ counts.blocks }}</div>
+  <div class="card">스케줄 활성 블록: {{ counts.scheduled_blocks }}</div>
+</div>
+<div class="card">
+  <h3>최근 실행 10건</h3>
+  <ul>{% for r in recent_runs %}<li><a href="/admin/runs/{{ r.id }}">#{{ r.id }}</a> {{ r.block.title }} - {{ r.status }}</li>{% else %}<li>없음</li>{% endfor %}</ul>
+</div>
+<div class="card">
+  <h3>최근 실패 5건</h3>
+  <ul>{% for r in failed_runs %}<li><a href="/admin/runs/{{ r.id }}">#{{ r.id }}</a> {{ r.summary }}</li>{% else %}<li>없음</li>{% endfor %}</ul>
+</div>
+{% endblock %}
