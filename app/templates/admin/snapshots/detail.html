@@ -6,6 +6,7 @@
   <p>상태: {{ snapshot.status }} / run_type: {{ snapshot.run_type }} / trigger: {{ snapshot.trigger_source }}</p>
   <p>시간: {{ snapshot.started_at }} ~ {{ snapshot.finished_at }} ({{ snapshot.duration_ms }} ms)</p>
   <p>요약: {{ snapshot.summary }}</p>
+  <p>run_params_json: {{ snapshot.run_params_json }}</p>
   <p>성공 {{ summary.success }} / 실패 {{ summary.failed }} / 스킵 {{ summary.skipped }}</p>
   <div class="actions-row">
     <form method="post" action="/admin/snapshots/{{ snapshot.id }}/rerun"><button type="submit">페이지 재실행</button></form>
@@ -24,7 +25,7 @@
   <h4>첨부</h4>
   <ul>
     {% for a in bs.attachments %}
-      <li><a href="/attachments/{{ a.id }}/download">{{ a.file_name }}</a> ({{ a.file_size }} bytes)</li>
+      <li><a href="{% if a.block_snapshot_id is defined %}/attachments/snapshot/{{ a.id }}/download{% else %}/attachments/{{ a.id }}/download{% endif %}">{{ a.file_name }}</a> ({{ a.file_size }} bytes)</li>
     {% else %}<li>없음</li>{% endfor %}
   </ul>
 </div>

@@ -1,6 +1,7 @@
 {% extends 'shared/base.html' %}
 {% block content %}
 <h1>리포트 페이지 관리</h1>
+<a class="btn" href="/admin/pages/new">새 페이지(템플릿)</a>
 <div class="card">
 <form method="post" action="/admin/pages/create">
   <select name="category_id">{% for c in categories %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</select>

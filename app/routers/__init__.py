@@ -5,6 +5,7 @@ from app.routers import (
     admin_pages,
     admin_runs,
     admin_snapshots,
+    admin_maintenance,
     attachments,
     view_portal,
 )
@@ -16,6 +17,7 @@ __all__ = [
     "admin_pages",
     "admin_runs",
     "admin_snapshots",
+    "admin_maintenance",
     "attachments",
     "view_portal",
 ]

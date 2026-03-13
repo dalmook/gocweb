@@ -11,7 +11,7 @@ except Exception:  # pragma: no cover
     oracledb = None
 
 
-def run_sql_block(source_sql: str, config: dict, output_dir: Path) -> dict:
+def run_sql_block(source_sql: str, config: dict, output_dir: Path, params: dict | None = None) -> dict:
     if not source_sql.strip():
         return {"status": "failed", "summary": "SQL empty", "error_text": "source SQL is empty"}
     if oracledb is None:
@@ -35,7 +35,7 @@ def run_sql_block(source_sql: str, config: dict, output_dir: Path) -> dict:
         }
 
     with oracledb.connect(user=user, password=pw, dsn=dsn) as conn:
-        df = pd.read_sql(source_sql, conn)
+        df = pd.read_sql(source_sql, conn, params=params or {})
 
     max_rows = int(config.get("max_rows_preview", 200))
     preview = df.head(max_rows)

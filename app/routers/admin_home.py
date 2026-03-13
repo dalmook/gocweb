@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.models import PageSnapshot
+from app.services.admin_ops import get_recent_failures
 from app.services.run_service import count_entities, latest_failed_runs, latest_runs
 
 router = APIRouter(prefix="/admin", tags=["admin-home"])
@@ -24,5 +25,6 @@ def admin_home(request: Request, db: Session = Depends(get_db)):
             "recent_runs": latest_runs(db, 10),
             "failed_runs": latest_failed_runs(db, 5),
             "recent_snapshots": db.scalars(select(PageSnapshot).order_by(PageSnapshot.started_at.desc()).limit(10)).all(),
+            "snapshot_failures": get_recent_failures(db, 10),
         },
     )

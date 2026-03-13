@@ -1,0 +1,8 @@
+{% extends 'shared/base.html' %}
+{% block content %}
+<h1>페이지 복제</h1>
+<div class="card">
+  <p>{{ page.title }} 를 복제합니다.</p>
+  <form method="post" action="/admin/pages/{{ page.id }}/clone"><button type="submit">복제 실행</button></form>
+</div>
+{% endblock %}

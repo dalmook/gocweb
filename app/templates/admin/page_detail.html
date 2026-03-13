@@ -6,8 +6,12 @@
 <p>페이지 스케줄: {% if page.schedule_enabled %}ON ({{ page.schedule_cron }}){% else %}OFF{% endif %}</p>
 {% if message %}<div class="card">{{ message }}</div>{% endif %}
 <div class="actions-row">
-  <form method="post" action="/admin/pages/{{ page.id }}/run"><button type="submit">페이지 전체 실행(스냅샷 생성)</button></form>
+  <form method="post" action="/admin/pages/{{ page.id }}/run">
+    <textarea name="common_params_json" rows="2">{}</textarea>
+    <button type="submit">페이지 전체 실행(공통 파라미터 + 스냅샷)</button>
+  </form>
   <a class="btn btn-secondary" href="/admin/snapshots/page/{{ page.id }}">페이지 스냅샷</a>
+  <form method="post" action="/admin/pages/{{ page.id }}/clone"><button type="submit">페이지 복제</button></form>
   <a class="btn btn-secondary" href="/admin/runs">내부 실행 로그</a>
   <a class="btn btn-secondary" href="/admin/blocks">블록 관리</a>
 </div>
@@ -49,7 +53,8 @@
   <p>최신 내부 실행로그: {% if r %}{{ r.started_at }} - {{ r.status }} ({{ r.duration_ms }} ms){% else %}없음{% endif %}</p>
   <div class="actions-row">
     <a class="btn btn-secondary" href="/admin/blocks/{{ b.id }}/edit">수정</a>
-    <form method="post" action="/admin/blocks/{{ b.id }}/run"><button type="submit" {% if b.block_type=='markdown' %}disabled{% endif %}>수동 실행</button></form>
+    <form method="post" action="/admin/blocks/{{ b.id }}/run"><textarea name="run_params_json" rows="2">{{ b.default_params_json or "{}" }}</textarea><button type="submit" {% if b.block_type=='markdown' %}disabled{% endif %}>수동 실행</button></form>
+    <form method="post" action="/admin/blocks/{{ b.id }}/clone"><button type="submit">복제</button></form>
   </div>
 </div>
 {% endfor %}

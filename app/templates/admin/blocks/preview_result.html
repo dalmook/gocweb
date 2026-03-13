@@ -1,0 +1,14 @@
+<div class="card">
+  <h3>최근 시험 실행 결과</h3>
+  {% for p in previews %}
+    <div class="card">
+      <p>{{ p.created_at }} / {{ p.status }} / {{ p.summary }}</p>
+      {% if p.content_html %}<div class="result-box">{{ p.content_html|safe }}</div>{% endif %}
+      {% if p.content_text %}<pre>{{ p.content_text }}</pre>{% endif %}
+      {% if p.error_text %}<div class="error-box"><pre>{{ p.error_text }}</pre></div>{% endif %}
+      <p class="muted">params: {{ p.run_params_json }}</p>
+    </div>
+  {% else %}
+    <p>시험 실행 이력 없음</p>
+  {% endfor %}
+</div>

@@ -8,6 +8,10 @@
   <div class="card">스케줄 활성 블록: {{ counts.scheduled_blocks }}</div>
   <div class="card">스케줄 활성 페이지: {{ counts.scheduled_pages }}</div>
 </div>
+<div class="card error-box">
+  <h3>최근 실패 리포트(스냅샷 기준)</h3>
+  <ul>{% for f in snapshot_failures %}<li>{{ f.started_at }} / {{ f.page_title }} / {{ f.block_title }} / {{ f.error_short }} <a href="/admin/snapshots/{{ f.snapshot_id }}">상세</a></li>{% else %}<li>없음</li>{% endfor %}</ul>
+</div>
 <div class="card">
   <h3>최근 페이지 스냅샷 10건</h3>
   <ul>{% for s in recent_snapshots %}<li><a href="/admin/snapshots/{{ s.id }}">#{{ s.id }}</a> {{ s.page.title }} - {{ s.status }}</li>{% else %}<li>없음</li>{% endfor %}</ul>

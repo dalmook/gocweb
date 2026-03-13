@@ -7,7 +7,10 @@
   <p>페이지: {{ b.page.title }} / 스케줄: {{ b.schedule_enabled }} / cron: {{ b.schedule_cron }}</p>
   {% set r=latest_map.get(b.id) %}
   <p>최신 실행: {% if r %}{{ r.started_at }} / {{ r.status }}{% else %}없음{% endif %}</p>
-  <a class="btn btn-secondary" href="/admin/blocks/{{ b.id }}/edit">편집</a>
+  <div class="actions-row">
+    <a class="btn btn-secondary" href="/admin/blocks/{{ b.id }}/edit">편집</a>
+    <form method="post" action="/admin/blocks/{{ b.id }}/clone"><button type="submit">복제</button></form>
+  </div>
 </div>
 {% else %}
 <div class="card">블록 없음</div>

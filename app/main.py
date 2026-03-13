@@ -8,7 +8,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from app.db import Base, SessionLocal, engine
+from app.db import Base, SessionLocal, engine, ensure_sqlite_compat_columns
 from app.init_data import seed_sample_data
 from app.routers import (
     admin_blocks,
@@ -17,6 +17,7 @@ from app.routers import (
     admin_pages,
     admin_runs,
     admin_snapshots,
+    admin_maintenance,
     attachments,
     view_portal,
 )
@@ -45,6 +46,7 @@ templates = Jinja2Templates(directory="app/templates")
 @app.on_event("startup")
 def startup_event() -> None:
     Base.metadata.create_all(bind=engine)
+    ensure_sqlite_compat_columns()
     db = SessionLocal()
     try:
         seed_sample_data(db)
@@ -74,6 +76,7 @@ app.include_router(admin_pages.router)
 app.include_router(admin_blocks.router)
 app.include_router(admin_runs.router)
 app.include_router(admin_snapshots.router)
+app.include_router(admin_maintenance.router)
 app.include_router(attachments.router)
 app.include_router(view_portal.router)
 

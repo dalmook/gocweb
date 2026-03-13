@@ -1,0 +1,15 @@
+{
+  "template_key": "markdown_notice_page",
+  "title": "공지/안내 페이지",
+  "description": "실행 없는 안내 전용 템플릿",
+  "blocks": [
+    {
+      "title": "공지",
+      "description": "공지",
+      "block_type": "markdown",
+      "source_code_text": "# 공지\n운영팀 안내 사항을 적어주세요.",
+      "sort_order": 1,
+      "is_active": true
+    }
+  ]
+}

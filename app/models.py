@@ -58,6 +58,8 @@ class ReportBlock(Base, TimestampMixin):
     schedule_cron: Mapped[str] = mapped_column(String(50), default="")
     sort_order: Mapped[int] = mapped_column(Integer, default=0)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    params_schema_json: Mapped[str] = mapped_column(Text, default="[]")
+    default_params_json: Mapped[str] = mapped_column(Text, default="{}")
 
     page: Mapped[ReportPage] = relationship("ReportPage", back_populates="blocks")
     runs: Mapped[list["RunHistory"]] = relationship("RunHistory", back_populates="block")
@@ -116,6 +118,7 @@ class PageSnapshot(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     is_published: Mapped[bool] = mapped_column(Boolean, default=True)
     trigger_source: Mapped[str] = mapped_column(String(20), default="admin")
+    run_params_json: Mapped[str] = mapped_column(Text, default="{}")
 
     page: Mapped[ReportPage] = relationship("ReportPage", back_populates="snapshots")
     block_snapshots: Mapped[list["BlockSnapshot"]] = relationship(
@@ -160,3 +163,19 @@ class SnapshotAttachment(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     block_snapshot: Mapped[BlockSnapshot] = relationship("BlockSnapshot", back_populates="attachments")
+
+
+class PreviewRun(Base):
+    __tablename__ = "preview_runs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    block_id: Mapped[int] = mapped_column(ForeignKey("report_blocks.id", ondelete="CASCADE"), nullable=False)
+    status: Mapped[str] = mapped_column(String(20), default="failed")
+    summary: Mapped[str] = mapped_column(String(500), default="")
+    content_html: Mapped[str] = mapped_column(Text, default="")
+    content_text: Mapped[str] = mapped_column(Text, default="")
+    error_text: Mapped[str] = mapped_column(Text, default="")
+    run_params_json: Mapped[str] = mapped_column(Text, default="{}")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    block: Mapped[ReportBlock] = relationship("ReportBlock")
