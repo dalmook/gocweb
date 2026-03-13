@@ -1,0 +1,25 @@
+{% extends 'shared/base.html' %}
+{% block content %}
+<h1>스냅샷 목록{% if page %} - {{ page.title }}{% endif %}</h1>
+<div class="card table-wrap">
+<table>
+  <thead><tr><th>ID</th><th>페이지</th><th>실행시각</th><th>run_type</th><th>status</th><th>duration</th><th>summary</th><th>상세</th></tr></thead>
+  <tbody>
+  {% for s in snapshots %}
+    <tr>
+      <td>{{ s.id }}</td>
+      <td>{{ s.page.title }}</td>
+      <td>{{ s.started_at }}</td>
+      <td>{{ s.run_type }}</td>
+      <td>{{ s.status }}</td>
+      <td>{{ s.duration_ms }} ms</td>
+      <td>{{ s.summary }}</td>
+      <td><a class="btn btn-sm" href="/admin/snapshots/{{ s.id }}">상세</a></td>
+    </tr>
+  {% else %}
+    <tr><td colspan="8">스냅샷 없음</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

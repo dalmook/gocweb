@@ -1,0 +1,10 @@
+<form method="get" class="history-select card">
+  <label>실행본 선택</label>
+  <select name="snapshot_id" onchange="this.form.submit()">
+    {% for s in snapshots %}
+    <option value="{{ s.id }}" {% if selected_snapshot and selected_snapshot.id == s.id %}selected{% endif %}>
+      #{{ s.id }} | {{ s.started_at }} | {{ s.status }}
+    </option>
+    {% endfor %}
+  </select>
+</form>

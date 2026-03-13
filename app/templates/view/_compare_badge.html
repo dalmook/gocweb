@@ -1,0 +1,7 @@
+{% if state == '변경 있음' %}
+<span class="badge view-failed">변경 있음</span>
+{% elif state == '동일' %}
+<span class="badge view-success">동일</span>
+{% else %}
+<span class="badge view-info">이전 결과 없음</span>
+{% endif %}

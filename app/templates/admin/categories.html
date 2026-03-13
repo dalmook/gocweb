@@ -1,0 +1,26 @@
+{% extends 'shared/base.html' %}
+{% block content %}
+<h1>카테고리 관리</h1>
+<div class="card">
+<form method="post" action="/admin/categories/create">
+  <input name="name" placeholder="이름" required>
+  <input name="slug" placeholder="slug" required>
+  <input name="sort_order" type="number" value="0">
+  <label><input type="checkbox" name="is_active" value="true" checked>활성</label>
+  <button type="submit">생성</button>
+</form>
+</div>
+{% for c in categories %}
+<div class="card">
+<form method="post" action="/admin/categories/{{ c.id }}/update">
+  <input name="name" value="{{ c.name }}" required>
+  <input name="slug" value="{{ c.slug }}" required>
+  <input name="sort_order" type="number" value="{{ c.sort_order }}">
+  <label><input type="checkbox" name="is_active" value="true" {% if c.is_active %}checked{% endif %}>활성</label>
+  <p>페이지 수: {{ page_counts.get(c.id, 0) }}</p>
+  <button type="submit">수정</button>
+</form>
+<form method="post" action="/admin/categories/{{ c.id }}/delete"><button class="btn-danger" type="submit">삭제</button></form>
+</div>
+{% endfor %}
+{% endblock %}
