@@ -1,0 +1,37 @@
+body { margin: 0; font-family: Arial, sans-serif; background: #f4f6fa; color: #111827; }
+.layout { display: flex; min-height: 100vh; }
+.sidebar { width: 230px; background: #111827; color: #fff; padding: 16px; }
+.sidebar a { color: #bfdbfe; text-decoration: none; display: block; margin: 8px 0; }
+.content { flex: 1; padding: 20px; }
+.card { background: #fff; border: 1px solid #d1d5db; border-radius: 8px; padding: 12px; margin-bottom: 12px; }
+.stat-grid { display: grid; grid-template-columns: repeat(4, minmax(150px, 1fr)); gap: 10px; }
+.actions-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+input, select, textarea, button { width: 100%; box-sizing: border-box; padding: 8px; margin: 4px 0; }
+textarea { font-family: Consolas, monospace; }
+button, .btn { background: #2563eb; color: #fff; border: none; border-radius: 6px; text-decoration: none; display: inline-block; padding: 8px 10px; width: auto; }
+.btn-secondary { background: #475569; }
+.btn-danger { background: #dc2626; }
+.btn-sm { font-size: 12px; padding: 4px 8px; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th, td { border: 1px solid #d1d5db; padding: 6px; text-align: left; }
+.badge { padding: 2px 8px; border-radius: 999px; font-size: 12px; }
+.badge.success, .badge.view-success { background: #dcfce7; color: #166534; }
+.badge.failed, .badge.view-failed { background: #fee2e2; color: #991b1b; }
+.badge.view-no-data { background: #e5e7eb; color: #374151; }
+.badge.view-info { background: #dbeafe; color: #1e3a8a; }
+.error-box { border: 1px solid #ef4444; background: #fff1f2; padding: 8px; }
+.warn-box { border: 1px solid #f59e0b; background: #fffbeb; padding: 8px; margin-top: 8px; }
+.result-box { max-height: 320px; overflow: auto; border: 1px solid #d1d5db; padding: 8px; background: #fff; }
+pre { white-space: pre-wrap; word-break: break-word; }
+
+.view-wrap { max-width: 1200px; margin: 0 auto; padding: 16px; }
+.view-header { margin-bottom: 12px; }
+.view-header a { color: #111827; text-decoration: none; }
+.view-content { display: block; }
+.view-grid { display: grid; grid-template-columns: repeat(2, minmax(280px, 1fr)); gap: 12px; }
+.view-card { border-left: 4px solid #93c5fd; }
+.view-block-head { display: flex; justify-content: space-between; gap: 10px; }
+.breadcrumb { font-size: 13px; color: #475569; margin-bottom: 10px; }
+.history-select { max-width: 420px; margin-top: 8px; }
+.muted { color: #6b7280; }

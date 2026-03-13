@@ -1,0 +1,32 @@
+<div class="card view-card">
+  <div class="view-block-head">
+    <div>
+      <h3>{{ br.block.title }}</h3>
+      <p class="muted">{{ br.block.description }}</p>
+      <p class="muted">타입: {{ br.block.block_type }} / 마지막 성공: {{ br.last_success_at or '없음' }}</p>
+    </div>
+    <div>
+      {% if br.status == 'success' %}
+        {% set status_label = '정상' %}{% set status_class = 'success' %}
+      {% elif br.status == 'failed' %}
+        {% set status_label = '경고' %}{% set status_class = 'failed' %}
+      {% elif br.status == '안내' %}
+        {% set status_label = '안내' %}{% set status_class = 'info' %}
+      {% else %}
+        {% set status_label = '결과 없음' %}{% set status_class = 'no-data' %}
+      {% endif %}
+      {% include 'view/_status_badge.html' %}
+    </div>
+  </div>
+
+  <div class="result-box">
+    {{ br.display_html | safe }}
+  </div>
+
+  {% if br.status == 'failed' %}
+  <div class="warn-box">현재 결과를 불러오지 못했습니다. {{ br.short_error }}</div>
+  {% endif %}
+
+  {% set attachments = br.attachments %}
+  {% include 'view/_attachments.html' %}
+</div>

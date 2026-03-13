@@ -1,0 +1,21 @@
+{% extends 'shared/base.html' %}
+{% block content %}
+<h1>블록 편집</h1>
+<div class="card">
+<form method="post" action="/admin/blocks/{{ block.id }}/update">
+  <select name="page_id">{% for p in pages %}<option value="{{ p.id }}" {% if p.id==block.page_id %}selected{% endif %}>{{ p.title }}</option>{% endfor %}</select>
+  <input name="title" value="{{ block.title }}" required>
+  <input name="description" value="{{ block.description }}">
+  <select name="block_type"><option value="markdown" {% if block.block_type=='markdown' %}selected{% endif %}>markdown</option><option value="python" {% if block.block_type=='python' %}selected{% endif %}>python</option><option value="sql" {% if block.block_type=='sql' %}selected{% endif %}>sql</option></select>
+  <textarea name="source_code_text" rows="16">{{ block.source_code_text }}</textarea>
+  <textarea name="config_json" rows="6">{{ block.config_json }}</textarea>
+  <label><input type="checkbox" name="schedule_enabled" value="true" {% if block.schedule_enabled %}checked{% endif %}>스케줄 사용</label>
+  <input name="schedule_cron" value="{{ block.schedule_cron or '0 7 * * *' }}">
+  <input name="sort_order" type="number" value="{{ block.sort_order }}">
+  <label><input type="checkbox" name="is_active" value="true" {% if block.is_active %}checked{% endif %}>활성</label>
+  <button type="submit">저장</button>
+</form>
+<form method="post" action="/admin/blocks/{{ block.id }}/run"><button type="submit" {% if block.block_type=='markdown' %}disabled{% endif %}>수동 실행</button></form>
+<form method="post" action="/admin/blocks/{{ block.id }}/delete"><button class="btn-danger" type="submit">삭제</button></form>
+</div>
+{% endblock %}
