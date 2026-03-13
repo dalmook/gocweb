@@ -6,7 +6,7 @@
 {% for p in pages %}
   {% set m = page_meta.get(p.id) %}
   <div class="card">
-    <h3><a href="/view/{{ category.slug }}/{{ p.slug }}">{{ p.title }}</a></h3>
+    <h3><a href="/view/page/{{ p.id }}">{{ p.title }}</a></h3>
     <p>{{ p.description }}</p>
     <p class="muted">마지막 게시: {{ m.latest or '없음' }}</p>
     <p class="muted">블록 수: {{ m.block_count }}</p>

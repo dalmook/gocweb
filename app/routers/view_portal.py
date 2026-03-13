@@ -17,6 +17,7 @@ from app.services.view_service import (
     get_active_pages_for_category,
     get_latest_page_status,
     get_page_for_view,
+    get_page_for_view_by_id,
 )
 
 router = APIRouter(prefix="/view", tags=["view-portal"])
@@ -62,6 +63,23 @@ def view_category(category_slug: str, request: Request, q: str = Query(""), db: 
         "view/category.html",
         {"request": request, "category": category, "pages": pages, "page_meta": page_meta, **build_view_common_context(db, q)},
     )
+
+
+@router.get("/page/{page_id}", response_class=HTMLResponse)
+def view_page_by_id(
+    page_id: int,
+    request: Request,
+    snapshot_id: int | None = Query(default=None),
+    snapshot_date: str | None = Query(default=None),
+    q: str = Query(""),
+    db: Session = Depends(get_db),
+):
+    page = get_page_for_view_by_id(db, page_id)
+    if not page:
+        raise HTTPException(status_code=404)
+
+    context = build_view_page_context(db, page.id, selected_snapshot_id=snapshot_id, snapshot_date=snapshot_date, history_limit=14)
+    return templates.TemplateResponse("view/page_detail.html", {"request": request, **context, **build_view_common_context(db, q)})
 
 
 @router.get("/{category_slug}/{page_slug}", response_class=HTMLResponse)

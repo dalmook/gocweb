@@ -5,7 +5,7 @@
 {% for c in categories %}<div class="card"><h3><a href="/view/{{ c.slug }}">{{ c.name }}</a></h3><p class="muted">활성 페이지 {{ page_counts.get(c.id,0) }}개</p></div>{% else %}<div class="card">카테고리 없음</div>{% endfor %}
 </div></div>
 <div class="grid-2">
-  <div class="card"><h3>최근 게시 리포트</h3><ul>{% for p in recent_pages %}{% set fr=freshness.get(p.id) %}<li><a href="/view/{{ p.category.slug }}/{{ p.slug }}">{{ p.title }}</a> <span class="muted">{{ fr.latest if fr else '-' }}</span></li>{% else %}<li>없음</li>{% endfor %}</ul></div>
-  <div class="card"><h3>최근 게시 스냅샷</h3><ul>{% for s in recent_snapshots %}<li><a href="/view/{{ s.page.category.slug }}/{{ s.page.slug }}?snapshot_id={{ s.id }}">{{ s.page.title }}</a> - {{ s.started_at }}</li>{% else %}<li>없음</li>{% endfor %}</ul></div>
+  <div class="card"><h3>최근 게시 리포트</h3><ul>{% for p in recent_pages %}{% set fr=freshness.get(p.id) %}<li><a href="/view/page/{{ p.id }}">{{ p.title }}</a> <span class="muted">{{ fr.latest if fr else '-' }}</span></li>{% else %}<li>없음</li>{% endfor %}</ul></div>
+  <div class="card"><h3>최근 게시 스냅샷</h3><ul>{% for s in recent_snapshots %}<li><a href="/view/page/{{ s.page.id }}?snapshot_id={{ s.id }}">{{ s.page.title }}</a> - {{ s.started_at }}</li>{% else %}<li>없음</li>{% endfor %}</ul></div>
 </div>
 {% endblock %}

@@ -8,7 +8,7 @@
   <div class="side-cat">
     <h4><a href="/view/{{ row.category.slug }}">{{ row.category.name }}</a></h4>
     {% for p in row.pages %}
-      <a class="side-page {% if page and page.id==p.id %}active{% endif %}" href="/view/{{ p.category.slug }}/{{ p.slug }}">{{ p.title }}</a>
+      <a class="side-page {% if page and page.id==p.id %}active{% endif %}" href="/view/page/{{ p.id }}">{{ p.title }}</a>
     {% else %}<div class="muted">게시된 리포트 없음</div>{% endfor %}
   </div>
   {% endfor %}

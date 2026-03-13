@@ -68,6 +68,21 @@ def get_page_for_view(db: Session, category_slug: str, page_slug: str):
     ).first()
 
 
+def get_page_for_view_by_id(db: Session, page_id: int):
+    return db.scalars(
+        select(ReportPage)
+        .join(Category, Category.id == ReportPage.category_id)
+        .where(
+            ReportPage.id == page_id,
+            Category.is_active.is_(True),
+            Category.is_archived.is_(False),
+            ReportPage.is_active.is_(True),
+            ReportPage.is_archived.is_(False),
+        )
+        .limit(1)
+    ).first()
+
+
 def get_latest_snapshot_for_page(db: Session, page_id: int) -> PageSnapshot | None:
     return db.scalars(
         select(PageSnapshot)
