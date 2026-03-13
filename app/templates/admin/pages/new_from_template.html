@@ -1,24 +1,44 @@
 {% extends 'shared/base.html' %}
-{% set breadcrumb = '대시보드 > 리포트 관리 > 신규 생성' %}
+{% set breadcrumb = '카테고리 > 리포트 관리 > 신규 등록' %}
 {% block content %}
-<h1 class="page-title">리포트 페이지 생성</h1>
+<h1 class="page-title">리포트 등록</h1>
 <div class="card">
 <form id="pageCreateScheduleForm" data-schedule-form method="post" action="/admin/pages/create">
-  <label>카테고리</label><select name="category_id">{% for c in categories %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</select>
-  <input name="title" placeholder="페이지 제목" required>
-  <input name="slug" placeholder="slug (비우면 자동 추천)">
-  <textarea name="description" rows="3" placeholder="설명"></textarea>
-  <label>템플릿 선택</label>
-  <select name="template_key"><option value="">빈 페이지</option>{% for t in templates %}<option value="{{ t.template_key }}">{{ t.template_key }} - {{ t.title }}</option>{% endfor %}</select>
-  <input name="sort_order" type="number" value="0">
-  <label><input type="checkbox" name="is_active" value="true" checked>활성</label>
-  <label>스케줄 유형</label>
-  <select name="schedule_kind"><option value="none">사용 안 함</option><option value="daily" selected>매일</option><option value="weekly">매주</option><option value="monthly">매월</option><option value="custom">사용자정의</option></select>
+  <label>카테고리</label>
+  <select name="category_id">{% for c in categories %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</select>
+
+  <label>리포트명</label>
+  <input name="title" placeholder="예: 주간 생산현황" required>
+
+  <label>설명</label>
+  <textarea name="description" rows="3" placeholder="사용자가 볼 리포트 설명"></textarea>
+
+  <label>스케줄</label>
+  <select name="schedule_kind">
+    <option value="none">사용 안 함</option>
+    <option value="daily" selected>매일</option>
+    <option value="weekly">매주</option>
+    <option value="monthly">매월</option>
+    <option value="custom">사용자정의</option>
+  </select>
   <div data-schedule-kind="daily"><label>실행시간</label><input type="time" name="schedule_time" value="07:00"></div>
   <div data-schedule-kind="weekly"><label>실행시간</label><input type="time" name="schedule_time" value="07:00">{% for i,label in [('1','월'),('2','화'),('3','수'),('4','목'),('5','금'),('6','토'),('0','일')] %}<label><input type="checkbox" name="schedule_weekdays" value="{{ i }}">{{ label }}</label>{% endfor %}</div>
-  <div data-schedule-kind="monthly"><label>실행시간</label><input type="time" name="schedule_time" value="07:00"><input type="number" name="schedule_month_day" value="1" min="1" max="31"></div>
-  <div data-schedule-kind="custom"><input class="mono" name="schedule_custom_cron" value="0 7 * * *"></div>
-  <button type="submit">생성</button>
+  <div data-schedule-kind="monthly"><label>실행시간</label><input type="time" name="schedule_time" value="07:00"><label>매월 일자</label><input type="number" name="schedule_month_day" value="1" min="1" max="31"></div>
+  <div data-schedule-kind="custom"><label>cron</label><input class="mono" name="schedule_custom_cron" value="0 7 * * *"></div>
+
+  <label><input type="checkbox" name="is_active" value="true" checked> 사용</label>
+
+  <details>
+    <summary>고급 설정 펼치기</summary>
+    <label>템플릿 선택</label>
+    <select name="template_key"><option value="">빈 리포트</option>{% for t in templates %}<option value="{{ t.template_key }}">{{ t.template_key }} - {{ t.title }}</option>{% endfor %}</select>
+    <label>slug (비우면 자동 생성)</label>
+    <input name="slug" placeholder="자동 생성 권장">
+    <label>정렬순서</label>
+    <input name="sort_order" type="number" value="0">
+  </details>
+
+  <button type="submit">리포트 생성</button>
 </form>
 </div>
 <script src="/static/js/admin_schedule_builder.js"></script>

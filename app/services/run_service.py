@@ -49,8 +49,8 @@ def run_block(db: Session, block_id: int, run_type: str = "manual", run_params: 
     block = db.get(ReportBlock, block_id)
     if not block:
         raise ValueError("block not found")
-    if block.block_type == "markdown":
-        raise ValueError("markdown block is not executable")
+    if block.block_type not in {"python", "sql"}:
+        raise ValueError(f"{block.block_type} block is not executable")
 
     started = datetime.utcnow()
     run = RunHistory(

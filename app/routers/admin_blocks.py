@@ -175,7 +175,7 @@ def run_block_endpoint(block_id: int, run_params_json: str = Form("{}"), db: Ses
     if not block:
         raise HTTPException(status_code=404)
     params = _to_dict(run_params_json, {})
-    if block.block_type != "markdown":
+    if block.block_type in {"python", "sql"}:
         run_block(db, block_id, run_type="manual", run_params=params)
     return RedirectResponse(f"/admin/pages/{block.page_id}?msg={quote_plus('블록 실행 완료')}", status_code=303)
 
@@ -186,7 +186,7 @@ def preview_block(block_id: int, run_params_json: str = Form("{}"), db: Session 
     if not block:
         raise HTTPException(status_code=404)
     params = _to_dict(run_params_json, {})
-    if block.block_type != "markdown":
+    if block.block_type in {"python", "sql"}:
         run = run_block(db, block_id, run_type="manual", run_params=params)
         db.add(
             PreviewRun(

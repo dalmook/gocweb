@@ -198,7 +198,7 @@ def update_page(
 
     p.category_id = category_id
     p.title = title
-    p.slug = slug
+    p.slug = slug or p.slug or (title or "page").strip().lower().replace(" ", "-")
     p.description = description
     p.sort_order = sort_order
     p.is_active = is_active
@@ -235,6 +235,7 @@ def page_detail(page_id: int, request: Request, msg: str | None = Query(default=
     latest_map = {b.id: block_latest_run(db, b.id) for b in blocks}
     snapshots = get_snapshots_for_page(db, page_id, 10)
     page_schedule = describe_schedule(page.schedule_enabled, page.schedule_kind, page.schedule_cron, page.schedule_meta_json)
+    recent_runs = db.scalars(select(RunHistory).where(RunHistory.page_id == page_id).order_by(RunHistory.started_at.desc()).limit(8)).all()
     return templates.TemplateResponse(
         "admin/page_detail.html",
         {
@@ -248,6 +249,7 @@ def page_detail(page_id: int, request: Request, msg: str | None = Query(default=
             "message": msg,
             "schedule": _schedule_form_from_page(page),
             "page_schedule": page_schedule,
+            "recent_runs": recent_runs,
         },
     )
 

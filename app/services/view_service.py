@@ -114,13 +114,23 @@ def _short_error(text: str) -> str:
     return text.strip().splitlines()[-1][:180] if text else ""
 
 
+def _render_non_exec_block(block: ReportBlock) -> str:
+    if block.block_type == "link":
+        url = (block.source_code_text or "").strip()
+        if not url:
+            return "<p>링크가 설정되지 않았습니다.</p>"
+        label = block.title or "링크 열기"
+        return f'<p><a class="btn" href="{url}" target="_blank" rel="noopener">{label}</a></p><p class="muted">{url}</p>'
+    return markdown_to_html(block.source_code_text or "")
+
+
 def _fallback_block_results(db: Session, page: ReportPage) -> list[ViewBlockResult]:
     results: list[ViewBlockResult] = []
     for block in page.blocks:
         if not block.is_active or block.is_archived:
             continue
-        if block.block_type == "markdown":
-            results.append(ViewBlockResult(block, None, "안내", "", markdown_to_html(block.source_code_text or ""), "", [], None))
+        if block.block_type in {"markdown", "link"}:
+            results.append(ViewBlockResult(block, None, "안내", "", _render_non_exec_block(block), "", [], None))
             continue
         run = db.scalars(select(RunHistory).where(RunHistory.block_id == block.id).order_by(RunHistory.started_at.desc()).limit(1)).first()
         status = run.status if run else "no-data"
@@ -163,8 +173,8 @@ def build_view_page_context(db: Session, page_id: int, selected_snapshot_id: int
         compare_rows = compare_snapshot_with_previous(db, snapshot.id)
         block_snap_map = {bs.block_id: bs for bs in snapshot.block_snapshots}
         for block in sorted([b for b in page.blocks if b.is_active and not b.is_archived], key=lambda x: (x.sort_order, x.id)):
-            if block.block_type == "markdown":
-                block_results.append(ViewBlockResult(block, None, "안내", "", markdown_to_html(block.source_code_text or ""), "", [], None))
+            if block.block_type in {"markdown", "link"}:
+                block_results.append(ViewBlockResult(block, None, "안내", "", _render_non_exec_block(block), "", [], None))
                 continue
             bs = block_snap_map.get(block.id)
             if not bs:
