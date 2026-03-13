@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>메인 화면</h1>
+<div class="card">
+  <h3>카테고리</h3>
+  <ul>
+  {% for c in categories %}
+    <li><a href="/categories/{{ c.id }}">{{ c.name }}</a> (페이지 {{ page_counts.get(c.id, 0) }}개)</li>
+  {% endfor %}
+  </ul>
+</div>
+<div class="card">
+  <h3>최근 실행</h3>
+  <ul>
+  {% for run in latest_runs %}
+    <li><a href="/runs/{{ run.id }}">#{{ run.id }}</a> - {{ run.summary }}
+      <span class="badge {{ run.status }}">{{ run.status }}</span></li>
+  {% else %}
+    <li>아직 실행 이력 없음</li>
+  {% endfor %}
+  </ul>
+</div>
+{% endblock %}

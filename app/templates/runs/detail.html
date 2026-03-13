@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>실행 결과 #{{ run.id }}</h1>
+<div class="card">
+  <p>시간: {{ run.started_at }} ~ {{ run.finished_at }} ({{ run.duration_ms }}ms)</p>
+  <p>상태: <span class="badge {{ run.status }}">{{ run.status }}</span></p>
+  <p>summary: {{ run.summary }}</p>
+  {% if run.content_html %}<div>{{ run.content_html | safe }}</div>{% endif %}
+  {% if run.content_text %}<pre>{{ run.content_text }}</pre>{% endif %}
+  {% if run.error_text %}<div class="error-box"><pre>{{ run.error_text }}</pre></div>{% endif %}
+  <h3>첨부파일</h3>
+  <ul>
+    {% for a in run.attachments %}
+      <li><a href="/attachments/{{ a.id }}/download">{{ a.file_name }}</a> ({{ a.file_size }} bytes)</li>
+    {% else %}
+      <li>없음</li>
+    {% endfor %}
+  </ul>
+</div>
+<p><a href="/pages/{{ run.page_id }}">페이지로 돌아가기</a></p>
+{% endblock %}
