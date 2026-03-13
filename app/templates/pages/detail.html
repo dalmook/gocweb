@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page-header card">
+  <div>
+    <div class="muted">카테고리 &gt; <a href="/categories/{{ page.category.id }}">{{ page.category.name }}</a></div>
+    <h1>{{ page.title }}</h1>
+    <p>{{ page.description }}</p>
+    <div class="meta-row">
+      <span>마지막 업데이트: {{ summary.last_updated_at or '없음' }}</span>
+      <span>성공 {{ summary.success_count }}개</span>
+      <span>실패 {{ summary.failed_count }}개</span>
+      <span>미실행 {{ summary.never_run_count }}개</span>
+    </div>
+  </div>
+  <div class="actions-row">
+    <form method="post" action="/pages/{{ page.id }}/run"><button type="submit">페이지 전체 실행</button></form>
+    <a class="btn btn-secondary" href="/runs?page_id={{ page.id }}">실행 이력 보기</a>
+    <a class="btn btn-secondary" href="/pages/{{ page.id }}/result">리포트 뷰</a>
+  </div>
+</div>
+
+{% if message %}
+<div class="card notice">{{ message }}</div>
+{% endif %}
+
+<div class="card">
+  <h3>페이지 수정</h3>
+  <form method="post" action="/pages/{{ page.id }}/update">
+    <select name="category_id">
+      {% for c in categories %}
+      <option value="{{ c.id }}" {% if c.id == page.category_id %}selected{% endif %}>{{ c.name }}</option>
+      {% endfor %}
+    </select>
+    <input name="title" value="{{ page.title }}" required>
+    <input name="slug" value="{{ page.slug }}" required>
+    <input name="description" value="{{ page.description }}">
+    <input name="sort_order" type="number" value="{{ page.sort_order }}">
+    <label><input type="checkbox" name="is_active" value="true" {% if page.is_active %}checked{% endif %}>활성</label>
+    <button type="submit">페이지 저장</button>
+  </form>
+</div>
+
+<div class="card">
+  <h3>블록 추가</h3>
+  <form method="post" action="/blocks/create">
+    <input type="hidden" name="page_id" value="{{ page.id }}">
+    <input name="title" placeholder="블록명" required>
+    <select name="block_type">
+      <option value="markdown">markdown</option>
+      <option value="python">python</option>
+      <option value="sql">sql</option>
+    </select>
+    <textarea name="source_code_text" rows="6" placeholder="코드/설명"></textarea>
+    <textarea name="config_json" rows="4">{}</textarea>
+    <label><input type="checkbox" name="schedule_enabled" value="true">스케줄 사용</label>
+    <input name="schedule_cron" value="0 7 * * *">
+    <input name="sort_order" type="number" value="0">
+    <label><input type="checkbox" name="is_active" value="true" checked>활성</label>
+    <button type="submit">블록 저장</button>
+  </form>
+</div>
+
+{% for card in cards %}
+  {% include 'pages/_block_card.html' %}
+{% else %}
+  <div class="card">블록이 없습니다.</div>
+{% endfor %}
+
+<script>
+function toggleBlock(id){
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.display = (el.style.display === 'none') ? 'block' : 'none';
+}
+</script>
+{% endblock %}

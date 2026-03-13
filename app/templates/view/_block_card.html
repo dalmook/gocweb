@@ -1,0 +1,26 @@
+<div class="card block-card">
+  <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;">
+    <div>
+      <h3>{{ br.block.title }}</h3>
+      <p class="muted">{{ br.block.description }}</p>
+      <p class="muted">타입: {{ br.block.block_type }} / 마지막 성공: {{ br.last_success_at or '없음' }}</p>
+    </div>
+    <div>
+      {% if br.status == 'success' %}{% set status_label = '정상' %}{% set status_class = 'success' %}
+      {% elif br.status == 'failed' %}{% set status_label = '실패' %}{% set status_class = 'failed' %}
+      {% elif br.status == 'partial_failed' %}{% set status_label = '일부 실패' %}{% set status_class = 'partial_failed' %}
+      {% elif br.status == '안내' %}{% set status_label = '안내' %}{% set status_class = 'info' %}
+      {% else %}{% set status_label = '결과 없음' %}{% set status_class = 'no-data' %}{% endif %}
+      {% include 'view/_status_badge.html' %}
+    </div>
+  </div>
+  {% if br.summary %}<div class="summary-highlight">요약: {{ br.summary }}</div>{% endif %}
+  <div class="table-wrap">{{ br.display_html | safe }}</div>
+  {% if br.status == 'failed' %}<div class="warn-box">오류: {{ br.short_error }}</div>{% endif %}
+  {% if br.run and br.run.content_text %}
+  <button class="btn no-print" type="button" onclick="copyText('txt-{{ br.block.id }}')">텍스트 복사</button>
+  <textarea id="txt-{{ br.block.id }}" class="copy-source">{{ br.run.content_text }}</textarea>
+  {% endif %}
+  {% set attachments = br.attachments %}
+  {% include 'view/_attachments.html' %}
+</div>

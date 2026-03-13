@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>실행 이력</h1>
+<div class="card">
+  <form method="get" action="/runs" class="filter-grid">
+    <select name="page_id">
+      <option value="">전체 페이지</option>
+      {% for p in pages %}
+      <option value="{{ p.id }}" {% if selected_page_id == p.id %}selected{% endif %}>{{ p.title }}</option>
+      {% endfor %}
+    </select>
+    <select name="block_id">
+      <option value="">전체 블록</option>
+      {% for b in blocks %}
+      <option value="{{ b.id }}" {% if selected_block_id == b.id %}selected{% endif %}>{{ b.title }}</option>
+      {% endfor %}
+    </select>
+    <select name="status">
+      <option value="" {% if not selected_status %}selected{% endif %}>전체 상태</option>
+      <option value="success" {% if selected_status == 'success' %}selected{% endif %}>success</option>
+      <option value="failed" {% if selected_status == 'failed' %}selected{% endif %}>failed</option>
+    </select>
+    <input type="number" name="limit" value="{{ limit }}">
+    <button type="submit">필터 적용</button>
+  </form>
+</div>
+
+<div class="card table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>실행시각</th>
+        <th>페이지명</th>
+        <th>블록명</th>
+        <th>run_type</th>
+        <th>status</th>
+        <th>duration</th>
+        <th>summary</th>
+        <th>action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for run in runs %}
+      <tr>
+        <td>{{ run.started_at }}</td>
+        <td><a href="/pages/{{ run.page_id }}">{{ run.page.title }}</a></td>
+        <td>{{ run.block.title }}</td>
+        <td>{{ run.run_type }}</td>
+        <td>{% set status_value = run.status %}{% include 'shared/_status_badge.html' %}</td>
+        <td>{{ run.duration_ms }} ms</td>
+        <td>{{ run.summary }}</td>
+        <td><a class="btn btn-sm" href="/runs/{{ run.id }}">상세</a></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="8">이력이 없습니다.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

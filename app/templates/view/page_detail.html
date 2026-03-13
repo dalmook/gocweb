@@ -1,0 +1,20 @@
+{% extends 'view/base.html' %}
+{% block content %}
+<div class="breadcrumb"><a href="/view">홈</a> > <a href="/view/{{ page.category.slug }}">{{ page.category.name }}</a> > {{ page.title }}</div>
+<div class="card">
+  <h2>{{ page.title }} <span class="status status-info">공식 게시본</span></h2>
+  <p>{{ page.description }}</p>
+  <p class="muted">마지막 게시 시각: {{ latest_update or '없음' }}</p>
+  {% if page_status == '정상' %}{% set status_label='정상' %}{% set status_class='success' %}
+  {% elif page_status == '일부 실패' %}{% set status_label='일부 실패' %}{% set status_class='partial_failed' %}
+  {% elif page_status == '실패' %}{% set status_label='실패' %}{% set status_class='failed' %}
+  {% else %}{% set status_label='결과 없음' %}{% set status_class='no-data' %}{% endif %}
+  {% include 'view/_status_badge.html' %}
+  {% if selected_snapshot %}<a class="btn no-print" href="/view/{{ page.category.slug }}/{{ page.slug }}/print?snapshot_id={{ selected_snapshot.id }}">인쇄</a>{% endif %}
+</div>
+{% if snapshots %}{% include 'view/_snapshot_selector.html' %}{% else %}<div class="card">게시된 스냅샷이 없습니다.</div>{% endif %}
+{% for br in block_results %}{% include 'view/_block_card.html' %}{% else %}<div class="card">표시할 결과가 없습니다.</div>{% endfor %}
+<script>
+function copyText(id){const el=document.getElementById(id);if(!el)return;el.select();document.execCommand('copy');}
+</script>
+{% endblock %}

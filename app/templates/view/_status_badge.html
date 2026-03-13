@@ -1,0 +1,3 @@
+{% set label = status_label or '결과 없음' %}
+{% set cls = status_class or 'no-data' %}
+<span class="status status-{{ cls }}">{{ label }}</span>

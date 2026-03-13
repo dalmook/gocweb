@@ -1,0 +1,13 @@
+{% extends 'view/base.html' %}
+{% block content %}
+<div class="print-header">
+  <h2>{{ page.title }} (인쇄용)</h2>
+  <p>스냅샷: {% if selected_snapshot %}#{{ selected_snapshot.id }} / {{ selected_snapshot.started_at }}{% else %}없음{% endif %}</p>
+</div>
+{% for br in block_results %}
+<div class="card">
+  <h3>{{ br.block.title }}</h3>
+  <div class="result-box">{{ br.display_html | safe }}</div>
+</div>
+{% endfor %}
+{% endblock %}

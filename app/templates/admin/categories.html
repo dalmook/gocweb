@@ -1,0 +1,51 @@
+{% extends 'shared/base.html' %}
+{% set breadcrumb = '대시보드 > 카테고리 관리' %}
+{% block content %}
+<h1 class="page-title">카테고리 관리</h1>
+{% if message %}<div class="card">{{ message }}</div>{% endif %}
+<div class="card">
+  <form class="toolbar" method="get" action="/admin/categories">
+    <label><input type="checkbox" name="show_archived" value="true" {% if show_archived %}checked{% endif %}> 보관 항목 보기</label>
+    <button type="submit">필터 적용</button>
+  </form>
+</div>
+<div class="card">
+  <h3>신규 카테고리</h3>
+  <form class="toolbar" method="post" action="/admin/categories/create">
+    <input name="name" placeholder="이름" required>
+    <input name="slug" placeholder="slug" required>
+    <input name="sort_order" type="number" value="0">
+    <label><input type="checkbox" name="is_active" value="true" checked>활성</label>
+    <button type="submit">생성</button>
+  </form>
+</div>
+<div class="card table-wrap">
+<table class="table">
+<thead><tr><th>이름</th><th>slug</th><th>페이지 수</th><th>상태</th><th>작업</th></tr></thead>
+<tbody>
+{% for c in categories %}
+<tr>
+<td>{{ c.name }}</td><td>{{ c.slug }}</td><td>{{ page_counts.get(c.id,0) }}</td>
+<td>
+  {% if c.is_archived %}{% set status='archived' %}{% set label='보관' %}{% include 'shared/_status_badge.html' %}
+  {% elif c.is_active %}{% set status='success' %}{% set label='활성' %}{% include 'shared/_status_badge.html' %}
+  {% else %}{% set status='inactive' %}{% set label='비활성' %}{% include 'shared/_status_badge.html' %}{% endif %}
+</td>
+<td class="actions-row">
+<form method="post" action="/admin/categories/{{ c.id }}/update" class="toolbar">
+  <input type="hidden" name="name" value="{{ c.name }}"><input type="hidden" name="slug" value="{{ c.slug }}"><input type="hidden" name="sort_order" value="{{ c.sort_order }}">{% if c.is_active %}<input type="hidden" name="is_active" value="true">{% endif %}
+  <button class="btn-secondary" type="submit">저장</button>
+</form>
+<form method="post" action="/admin/categories/{{ c.id }}/archive">
+  {% if c.is_archived %}<input type="hidden" name="archive" value="false"><button class="btn-secondary">보관해제</button>{% else %}<button class="btn-warning">보관</button>{% endif %}
+</form>
+<form method="post" action="/admin/categories/{{ c.id }}/delete">
+  <button class="{% if page_counts.get(c.id,0)>0 %}btn-warning{% else %}btn-danger{% endif %}">{% if page_counts.get(c.id,0)>0 %}참조있음(보관){% else %}삭제{% endif %}</button>
+</form>
+</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% endblock %}

@@ -1,0 +1,8 @@
+{% if search_query %}
+<div class="side-cat">
+  <h4>검색 결과</h4>
+  {% for p in search_results %}
+    <a class="side-page" href="/view/{{ p.category.slug }}/{{ p.slug }}">{{ p.category.name }} / {{ p.title }}</a>
+  {% else %}<div class="muted">검색 결과 없음</div>{% endfor %}
+</div>
+{% endif %}

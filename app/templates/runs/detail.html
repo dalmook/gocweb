@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>실행 결과 #{{ run.id }}</h1>
+<div class="card">
+  <p>실행시각: {{ run.started_at }} ~ {{ run.finished_at }}</p>
+  <p>상태: {% set status_value = run.status %}{% include 'shared/_status_badge.html' %}</p>
+  <p>summary: {{ run.summary }}</p>
+  <p>run_type: {{ run.run_type }} / duration: {{ run.duration_ms }} ms</p>
+  <div class="actions-row">
+    <form method="post" action="/runs/{{ run.id }}/rerun"><button type="submit">다시 실행</button></form>
+    <a class="btn btn-secondary" href="/runs?page_id={{ run.page_id }}">페이지 이력</a>
+    <a class="btn btn-secondary" href="/pages/{{ run.page_id }}">페이지로 이동</a>
+  </div>
+</div>
+
+<div class="card">
+  <h3>HTML 미리보기</h3>
+  <div class="result-box">
+    {% if run.content_html %}
+      {{ run.content_html | safe }}
+    {% else %}
+      <p>HTML 결과 없음</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <h3>Text 결과</h3>
+  {% if run.content_text %}<pre>{{ run.content_text }}</pre>{% else %}<p>텍스트 결과 없음</p>{% endif %}
+</div>
+
+<div class="card">
+  <h3>오류 메시지</h3>
+  {% if run.error_text %}<div class="error-box"><pre>{{ run.error_text }}</pre></div>{% else %}<p>오류 없음</p>{% endif %}
+</div>
+
+<div class="card">
+  {% set attachments = run.attachments %}
+  {% include 'shared/_attachments.html' %}
+</div>
+{% endblock %}

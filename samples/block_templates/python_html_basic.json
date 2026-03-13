@@ -1,0 +1,1 @@
+{"template_key":"python_html_basic","block_type":"python","source_code_text":"def main(env):\n    return {'html':'<h3>hello</h3>','summary':'ok'}"}

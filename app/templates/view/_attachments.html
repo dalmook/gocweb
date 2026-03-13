@@ -1,0 +1,10 @@
+<div class="attachments">
+  <h5>첨부파일</h5>
+  <ul>
+    {% for a in attachments %}
+      <li>{{ a.file_name }} ({{ a.file_size }} bytes) <a class="btn btn-sm" href="{% if a.block_snapshot_id is defined %}/attachments/snapshot/{{ a.id }}/download{% else %}/attachments/{{ a.id }}/download{% endif %}">다운로드</a></li>
+    {% else %}
+      <li>첨부파일 없음</li>
+    {% endfor %}
+  </ul>
+</div>

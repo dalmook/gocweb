@@ -1,0 +1,16 @@
+<aside class="view-sidebar no-print">
+  <h2><a href="/view">리포트 포털</a></h2>
+  <form method="get" action="{{ request.url.path }}">
+    <input id="sidebarSearch" name="q" value="{{ search_query or '' }}" placeholder="카테고리/리포트 검색">
+  </form>
+  {% include 'view/_search_results.html' %}
+  {% for row in sidebar_tree %}
+  <div class="side-cat">
+    <h4><a href="/view/{{ row.category.slug }}">{{ row.category.name }}</a></h4>
+    {% for p in row.pages %}
+      <a class="side-page {% if page and page.id==p.id %}active{% endif %}" href="/view/{{ p.category.slug }}/{{ p.slug }}">{{ p.title }}</a>
+    {% else %}<div class="muted">게시된 리포트 없음</div>{% endfor %}
+  </div>
+  {% endfor %}
+</aside>
+<script src="/static/js/view_search.js"></script>
