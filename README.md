@@ -1,21 +1,17 @@
-# 스케줄형 리포트 관리자 포털 (1단계)
+# 스케줄형 리포트 관리자/조회 포털 (2단계)
 
-이 프로젝트는 **관리자가 Python/SQL 리포트를 등록/수정/실행/스케줄링**하고, 실행 결과를 저장하는 로컬 Windows PC용 포털입니다.
+이 프로젝트는 **관리자(/admin)** 가 Python/SQL 리포트를 등록·실행·스케줄링하고,
+**사용자(/view)** 는 저장된 실행 결과만 읽는 **읽기 전용 포털**입니다.
 
-핵심 원칙:
-- 관리자 영역: `/admin/*`
-- 사용자 영역(placeholder): `/view/*`
-- 사용자 영역은 직접 실행/수정 기능 없이, 향후 저장 결과 조회 전용으로 확장
+## 핵심 분리 원칙
+- `/admin/*`: 등록/수정/실행/스케줄/운영 이력
+- `/view/*`: 저장된 RunHistory 조회 전용 (실행/수정 기능 없음)
+- 사용자 화면에서 Python/SQL 실시간 실행 금지
 
 ## 기술 스택
 - Python 3.11+
-- FastAPI
-- Jinja2
-- SQLAlchemy
-- APScheduler
-- pandas
-- oracledb
-- SQLite
+- FastAPI, Jinja2, SQLAlchemy, APScheduler
+- SQLite, pandas, oracledb
 
 ## 폴더 구조
 ```text
@@ -25,35 +21,23 @@ app/
   models.py
   init_data.py
   services/
+    run_service.py        # 관리자 실행 서비스
+    view_service.py       # 사용자 조회 서비스
     runner_python.py
     runner_sql.py
     scheduler.py
-    run_service.py
     storage.py
   routers/
-    admin_home.py
-    admin_categories.py
-    admin_pages.py
-    admin_blocks.py
-    admin_runs.py
+    admin_*.py
     view_portal.py
   templates/
     admin/
     view/
     shared/
   static/
-data/
-  app.db
-  artifacts/
-  uploads/
-  temp/
-samples/
-requirements.txt
-.env.example
-README.md
 ```
 
-## Windows CMD 실행 방법
+## Windows CMD 실행
 ```cmd
 python -m venv .venv
 .venv\Scripts\activate
@@ -63,90 +47,52 @@ python -m app.main
 ```
 
 ## URL
-- 관리자 포털: `http://127.0.0.1:8000/admin`
-- 사용자 포털 placeholder: `http://127.0.0.1:8000/view`
+- 관리자: `http://127.0.0.1:8000/admin`
+- 사용자 홈: `http://127.0.0.1:8000/view`
+- 사용자 카테고리: `/view/{category_slug}`
+- 사용자 페이지: `/view/{category_slug}/{page_slug}`
 
-## 환경변수
-`.env.example` 주요 항목:
-- `APP_HOST`, `APP_PORT`
-- `ORACLE_USER`, `ORACLE_PASSWORD`
-- `DEFAULT_PYTHON_TIMEOUT_SEC`
+## 관리자/사용자 흐름
+1. 관리자 화면에서 블록 등록/수정
+2. 관리자 수동 실행 또는 스케줄러 실행
+3. 결과는 `RunHistory`/`Attachment`에 저장
+4. 사용자 화면은 저장 결과를 조회만 수행
 
-CMD 설정 예시:
+## 사용자 조회 방식 (2단계)
+- 기본: 블록별 최신 success 우선
+- 실패만 있으면 최신 failed 표시
+- 실행 이력 선택(`run_id`) 시 해당 시점 이전 가장 가까운 결과 표시
+- 첨부파일 다운로드 지원(.sql/.csv/기타 attachments)
+- 사용자 화면에서 내부 운영정보 노출 금지:
+  - source_code_text, config_json, schedule_cron, traceback 전체
+
+## 스케줄 동작
+- `schedule_enabled=true` 블록을 앱 시작 시 등록
+- cron 5필드 지원 (`minute hour day month day_of_week`)
+- 블록 단위 scheduled 실행
+
+## Python 블록 규격
+결과 인식 순서:
+1. `main(env)` 반환 dict
+2. 전역 `result` dict
+3. 전역 `RESULT_HTML`
+
+`{'html': ...}` 는 `content_html`로 자동 매핑
+
+## SQL 블록 규격
+`source_code_text`를 SQL 원문으로 사용
+- user/pw는 환경변수(`ORACLE_USER`, `ORACLE_PASSWORD`)에서 로드
+- thick mode 옵션 지원
+- HTML preview 저장
+- SQL/CSV 파일 첨부 저장
+
+## 환경변수 예시 (CMD)
 ```cmd
 set ORACLE_USER=your_user
 set ORACLE_PASSWORD=your_password
 python -m app.main
 ```
 
-## 관리자 기능 (1단계)
-- 카테고리 CRUD (`/admin/categories`)
-- 리포트 페이지 CRUD (`/admin/pages`)
-- 블록 CRUD 및 편집 (`/admin/blocks`, `/admin/blocks/{id}/edit`)
-- 블록 수동 실행
-- 페이지 전체 실행 (활성 python/sql 블록만 sort_order 순)
-- 실행 이력 목록/상세 (`/admin/runs`)
-- 스케줄 사용여부/cron 관리 (블록 단위)
-
-## 실행 구조
-- 관리자 또는 스케줄러가 실행
-- 실행 결과는 `RunHistory` 및 `Attachment`에 저장
-- 사용자 포털은 향후 이 저장 결과만 읽도록 설계
-- markdown 블록은 설명용이며 실행 대상 제외
-
-## Python 블록 규격
-러너 인식 순서:
-1. `main(env)` 반환 dict
-2. 전역 `result` dict
-3. 전역 `RESULT_HTML`
-
-우선 키:
-- `summary`
-- `artifact_type`
-- `content_html`
-- `content_text`
-- `attachments`
-
-추가 호환:
-- `{'html': ...}` 반환 시 `content_html` 자동 매핑
-- 예외 시 traceback 저장
-
-## SQL 블록 규격
-`source_code_text`를 SQL 원문으로 실행
-
-예시 `config_json`:
-```json
-{
-  "dsn": "host:port/service",
-  "user_env": "ORACLE_USER",
-  "pw_env": "ORACLE_PASSWORD",
-  "thick_mode": true,
-  "oracle_client_lib_dir": "C:\\instantclient",
-  "max_rows_preview": 200
-}
-```
-
-동작:
-- user/pw는 환경변수에서 읽음
-- thick_mode + lib_dir 설정 시 `oracledb.init_oracle_client()` 시도
-- DataFrame HTML preview 저장
-- SQL 원문(.sql), CSV(.csv) 아티팩트 저장
-
-## 스케줄 동작
-- APScheduler 사용
-- 앱 시작 시 `schedule_enabled=true` 블록 등록
-- 5필드 cron 지원 (`minute hour day month day_of_week`)
-- 예: `0 7 * * *` (매일 오전 7시)
-
-## 샘플 데이터
-초기 실행 시 자동 생성:
-- 카테고리 2개
-- 리포트 페이지 2개
-- markdown 1개
-- python 1개
-- sql 1개
-
 ## 주의사항
-- 이번 단계는 관리자 운영 포털 중심
-- 사용자용 조회 포털은 placeholder만 구현
-- 로그인/권한관리/배포/React/Docker는 범위 외
+- 로그인/권한관리, React, Docker는 범위 외
+- 사용자 포털은 조회 전용이며 실행/수정 기능을 제공하지 않음

@@ -1,0 +1,32 @@
+{% extends 'view/base.html' %}
+{% block content %}
+<h2>카테고리</h2>
+<div class="view-grid">
+  {% for c in categories %}
+  <div class="card">
+    <h3><a href="/view/{{ c.slug }}">{{ c.name }}</a></h3>
+    <p>활성 페이지: {{ page_counts.get(c.id, 0) }}</p>
+  </div>
+  {% else %}
+  <div class="card">카테고리가 없습니다.</div>
+  {% endfor %}
+</div>
+
+<div class="card">
+  <h3>최근 업데이트된 리포트</h3>
+  <ul>
+    {% for p in recent_pages %}
+      <li>
+        <a href="/view/{{ p.category.slug }}/{{ p.slug }}">{{ p.title }}</a>
+        {% set fr = freshness.get(p.id) %}
+        {% if fr and fr.is_today %}
+          <span class="badge view-success">오늘 갱신됨</span>
+        {% endif %}
+        <span class="muted">최근 갱신: {{ fr.latest if fr else '없음' }}</span>
+      </li>
+    {% else %}
+      <li>최근 업데이트 내역 없음</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

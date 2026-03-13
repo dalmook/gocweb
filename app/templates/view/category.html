@@ -1,0 +1,23 @@
+{% extends 'view/base.html' %}
+{% block content %}
+<div class="breadcrumb"><a href="/view">홈</a> &gt; {{ category.name }}</div>
+<h2>{{ category.name }}</h2>
+<div class="view-grid">
+{% for p in pages %}
+  {% set m = page_meta.get(p.id) %}
+  <div class="card">
+    <h3><a href="/view/{{ category.slug }}/{{ p.slug }}">{{ p.title }}</a></h3>
+    <p>{{ p.description }}</p>
+    <p class="muted">최근 성공/갱신: {{ m.latest or '없음' }}</p>
+    <p class="muted">포함 블록: {{ m.block_count }}</p>
+    {% if m.status == '정상' %}{% set status_label='정상' %}{% set status_class='success' %}
+    {% elif m.status == '일부 실패' %}{% set status_label='일부 실패' %}{% set status_class='failed' %}
+    {% else %}{% set status_label='결과 없음' %}{% set status_class='no-data' %}
+    {% endif %}
+    {% include 'view/_status_badge.html' %}
+  </div>
+{% else %}
+  <div class="card">활성 페이지가 없습니다.</div>
+{% endfor %}
+</div>
+{% endblock %}
