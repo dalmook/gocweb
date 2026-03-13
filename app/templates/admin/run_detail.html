@@ -1,0 +1,12 @@
+{% extends 'shared/base.html' %}
+{% block content %}
+<h1>실행 상세 #{{ run.id }}</h1>
+<div class="card">
+  <p>요약: {{ run.summary }}</p>
+  <p>상태: {{ run.status }} / 타입: {{ run.run_type }} / 실행시각: {{ run.started_at }}</p>
+</div>
+<div class="card"><h3>HTML 미리보기</h3><div class="result-box">{{ run.content_html|safe }}</div></div>
+<div class="card"><h3>content_text</h3><pre>{{ run.content_text }}</pre></div>
+<div class="card"><h3>error_text</h3><div class="error-box"><pre>{{ run.error_text }}</pre></div></div>
+<div class="card">{% set attachments = run.attachments %}{% include 'shared/_attachments.html' %}</div>
+{% endblock %}

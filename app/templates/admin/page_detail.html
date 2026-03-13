@@ -1,0 +1,43 @@
+{% extends 'shared/base.html' %}
+{% block content %}
+<h1>{{ page.title }}</h1>
+<p>{{ page.description }}</p>
+<p>카테고리: {{ page.category.name }}</p>
+<div class="actions-row">
+  <form method="post" action="/admin/pages/{{ page.id }}/run"><button type="submit">페이지 전체 실행</button></form>
+  <a class="btn btn-secondary" href="/admin/runs">실행 이력 보기</a>
+  <a class="btn btn-secondary" href="/admin/blocks">블록 관리</a>
+</div>
+
+<div class="card">
+  <h3>블록 추가</h3>
+  <form method="post" action="/admin/blocks/create">
+    <input type="hidden" name="page_id" value="{{ page.id }}">
+    <input name="title" placeholder="제목" required>
+    <input name="description" placeholder="설명">
+    <select name="block_type"><option value="markdown">markdown</option><option value="python">python</option><option value="sql">sql</option></select>
+    <textarea name="source_code_text" rows="8"></textarea>
+    <textarea name="config_json" rows="4">{}</textarea>
+    <label><input type="checkbox" name="schedule_enabled" value="true">스케줄 사용</label>
+    <input name="schedule_cron" value="0 7 * * *">
+    <input name="sort_order" type="number" value="0">
+    <label><input type="checkbox" name="is_active" value="true" checked>활성</label>
+    <button type="submit">추가</button>
+  </form>
+</div>
+
+{% for b in blocks %}
+<div class="card">
+  <h3>{{ b.title }} ({{ b.block_type }})</h3>
+  <p>{{ b.description }}</p>
+  <p>스케줄: {% if b.schedule_enabled %}ON ({{ b.schedule_cron }}){% else %}OFF{% endif %} / 활성: {{ b.is_active }}</p>
+  {% set r = latest_map.get(b.id) %}
+  <p>최신 실행: {% if r %}{{ r.started_at }} - {{ r.status }} ({{ r.duration_ms }} ms){% else %}없음{% endif %}</p>
+  <div class="actions-row">
+    <a class="btn btn-secondary" href="/admin/blocks/{{ b.id }}/edit">수정</a>
+    <form method="post" action="/admin/blocks/{{ b.id }}/run"><button type="submit" {% if b.block_type=='markdown' %}disabled{% endif %}>수동 실행</button></form>
+    <a class="btn btn-secondary" href="/admin/runs">이력 보기</a>
+  </div>
+</div>
+{% endfor %}
+{% endblock %}

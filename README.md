@@ -1,13 +1,59 @@
-# 코드 등록형 리포트 포털 (2단계 확장)
+# 스케줄형 리포트 관리자 포털 (1단계)
 
-FastAPI + Jinja2 + SQLite 기반의 Windows 로컬 실행용 포털입니다. 카테고리/페이지/블록을 등록하고 Python/SQL/Markdown 블록을 실행하여 결과/첨부파일/이력을 한 화면에서 확인할 수 있습니다.
+이 프로젝트는 **관리자가 Python/SQL 리포트를 등록/수정/실행/스케줄링**하고, 실행 결과를 저장하는 로컬 Windows PC용 포털입니다.
 
-## 1) 요구 환경
-- Windows 10/11
+핵심 원칙:
+- 관리자 영역: `/admin/*`
+- 사용자 영역(placeholder): `/view/*`
+- 사용자 영역은 직접 실행/수정 기능 없이, 향후 저장 결과 조회 전용으로 확장
+
+## 기술 스택
 - Python 3.11+
-- (선택) Oracle Instant Client (Oracle SQL 실행 시)
+- FastAPI
+- Jinja2
+- SQLAlchemy
+- APScheduler
+- pandas
+- oracledb
+- SQLite
 
-## 2) 설치/실행 (Windows CMD)
+## 폴더 구조
+```text
+app/
+  main.py
+  db.py
+  models.py
+  init_data.py
+  services/
+    runner_python.py
+    runner_sql.py
+    scheduler.py
+    run_service.py
+    storage.py
+  routers/
+    admin_home.py
+    admin_categories.py
+    admin_pages.py
+    admin_blocks.py
+    admin_runs.py
+    view_portal.py
+  templates/
+    admin/
+    view/
+    shared/
+  static/
+data/
+  app.db
+  artifacts/
+  uploads/
+  temp/
+samples/
+requirements.txt
+.env.example
+README.md
+```
+
+## Windows CMD 실행 방법
 ```cmd
 python -m venv .venv
 .venv\Scripts\activate
@@ -16,81 +62,57 @@ copy .env.example .env
 python -m app.main
 ```
 
-접속 URL: `http://127.0.0.1:8000`
+## URL
+- 관리자 포털: `http://127.0.0.1:8000/admin`
+- 사용자 포털 placeholder: `http://127.0.0.1:8000/view`
 
-## 3) 환경변수
-`.env.example`
+## 환경변수
+`.env.example` 주요 항목:
 - `APP_HOST`, `APP_PORT`
 - `ORACLE_USER`, `ORACLE_PASSWORD`
 - `DEFAULT_PYTHON_TIMEOUT_SEC`
 
-CMD에서 즉시 설정 예시:
+CMD 설정 예시:
 ```cmd
-set ORACLE_USER=my_user
-set ORACLE_PASSWORD=my_password
+set ORACLE_USER=your_user
+set ORACLE_PASSWORD=your_password
 python -m app.main
 ```
 
-## 4) 페이지 전체 실행 방식
-- 페이지 상단 **페이지 전체 실행** 버튼 클릭 시:
-  - 해당 페이지의 활성 블록 중 `python/sql`만 `sort_order` 순서로 실행
-  - markdown 블록은 실행 대상 제외
-  - 블록별로 개별 `RunHistory` 저장
-  - 실패해도 다음 블록 계속 실행
-  - 실행 후 `총/성공/실패` 요약 메시지를 페이지 상단에 표시
+## 관리자 기능 (1단계)
+- 카테고리 CRUD (`/admin/categories`)
+- 리포트 페이지 CRUD (`/admin/pages`)
+- 블록 CRUD 및 편집 (`/admin/blocks`, `/admin/blocks/{id}/edit`)
+- 블록 수동 실행
+- 페이지 전체 실행 (활성 python/sql 블록만 sort_order 순)
+- 실행 이력 목록/상세 (`/admin/runs`)
+- 스케줄 사용여부/cron 관리 (블록 단위)
 
-## 5) 블록 카드 화면 설명
-페이지 상세 화면에서 블록이 카드 형태로 표시됩니다.
-- 카드 상단: 블록명, 타입 배지, 최신 상태(success/failed/never-run), 마지막 실행시각, 소요시간
-- 카드 액션: 실행 / 이력 보기 / 접기-펼치기 / 수정 / 삭제
-- 카드 본문:
-  - markdown: 렌더링된 설명/가이드
-  - python/sql: 최신 선호 결과(성공 우선, 없으면 실패) 출력
-  - 오류 발생 시 빨간 에러 박스 표시
-  - 첨부파일 목록 및 다운로드 버튼 제공
+## 실행 구조
+- 관리자 또는 스케줄러가 실행
+- 실행 결과는 `RunHistory` 및 `Attachment`에 저장
+- 사용자 포털은 향후 이 저장 결과만 읽도록 설계
+- markdown 블록은 설명용이며 실행 대상 제외
 
-## 6) 실행 이력 확인 방법
-- 좌측 메뉴 **실행 이력** 진입: `/runs`
-- 필터: 페이지/블록/상태(success/failed)/limit
-- 컬럼: 실행시각, 페이지명, 블록명, run_type, status, duration, summary, 상세
-- 상세 화면(`/runs/{id}`): HTML 미리보기, 텍스트, 오류, 첨부, 다시 실행 버튼
-
-## 7) 첨부 다운로드 방식
-- 첨부는 블록 카드 및 실행 상세 화면에서 표시
-- 다운로드 URL: `/attachments/{attachment_id}/download`
-- SQL 블록은 성공 시 기본적으로:
-  - `query.sql` (원본 SQL)
-  - `result.csv` (결과 CSV)
-
-## 8) Markdown 블록 사용법
-- markdown 블록은 보고서 설명/주의사항/운영 메모 용도로 사용
-- 제목/목록/강조 등 기본 문법 렌더링 지원
-
-## 9) Python / SQL 결과 표시 규칙
-- 결과 선택 우선순위(블록 카드):
-  1) 최신 success
-  2) 없으면 최신 failed
-  3) 없으면 "아직 실행 결과 없음"
-- 렌더링 우선순위:
-  - `content_html` 우선
-  - 없으면 `content_text`를 `<pre>`로 출력
-- `summary`는 카드 상단 요약 줄로 표시
-
-## 10) Python 블록 등록 규격
-러너는 다음 순서로 결과를 인식합니다.
+## Python 블록 규격
+러너 인식 순서:
 1. `main(env)` 반환 dict
 2. 전역 `result` dict
 3. 전역 `RESULT_HTML`
 
-인식 키: `summary`, `artifact_type`, `content_html`, `content_text`, `attachments`
+우선 키:
+- `summary`
+- `artifact_type`
+- `content_html`
+- `content_text`
+- `attachments`
 
 추가 호환:
-- `{'html': '<...>'}`만 반환해도 `content_html`로 자동 매핑
-- subprocess 격리 실행
+- `{'html': ...}` 반환 시 `content_html` 자동 매핑
 - 예외 시 traceback 저장
 
-## 11) SQL 블록 등록 규격
-`block_type=sql` + `source_code_text` SQL 실행
+## SQL 블록 규격
+`source_code_text`를 SQL 원문으로 실행
 
 예시 `config_json`:
 ```json
@@ -104,19 +126,27 @@ python -m app.main
 }
 ```
 
-## 12) 스케줄러
+동작:
+- user/pw는 환경변수에서 읽음
+- thick_mode + lib_dir 설정 시 `oracledb.init_oracle_client()` 시도
+- DataFrame HTML preview 저장
+- SQL 원문(.sql), CSV(.csv) 아티팩트 저장
+
+## 스케줄 동작
 - APScheduler 사용
-- 앱 시작 시 `schedule_enabled=true` 블록 자동 등록
-- 5필드 cron(`minute hour day month day_of_week`) 지원
-- 예: `0 7 * * *` (매일 07:00)
+- 앱 시작 시 `schedule_enabled=true` 블록 등록
+- 5필드 cron 지원 (`minute hour day month day_of_week`)
+- 예: `0 7 * * *` (매일 오전 7시)
 
-## 13) 샘플 데이터
-초기 1회 자동 생성:
-- 카테고리 2개(영업/운영)
-- 페이지 3개
-- markdown/python/sql 블록 샘플 다수
+## 샘플 데이터
+초기 실행 시 자동 생성:
+- 카테고리 2개
+- 리포트 페이지 2개
+- markdown 1개
+- python 1개
+- sql 1개
 
-## 14) 주의사항
-- 인증/권한/배포/멀티유저는 범위 외
-- 내부 관리자 입력 전제로 `content_html`은 신뢰 콘텐츠로 렌더링
-- Oracle 접속은 네트워크/권한/Instant Client 설치 상태에 따라 달라집니다.
+## 주의사항
+- 이번 단계는 관리자 운영 포털 중심
+- 사용자용 조회 포털은 placeholder만 구현
+- 로그인/권한관리/배포/React/Docker는 범위 외

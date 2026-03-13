@@ -5,8 +5,8 @@ from apscheduler.triggers.cron import CronTrigger
 from sqlalchemy import select
 
 from app.db import SessionLocal
-from app.models import Block
-from app.services.executor import execute_block
+from app.models import ReportBlock
+from app.services.run_service import run_block
 
 scheduler = BackgroundScheduler()
 
@@ -19,30 +19,31 @@ def _parse_cron_5(expr: str) -> CronTrigger:
     return CronTrigger(minute=minute, hour=hour, day=day, month=month, day_of_week=dow)
 
 
-def register_jobs() -> None:
-    scheduler.remove_all_jobs()
+def _run_block_job(block_id: int) -> None:
     db = SessionLocal()
     try:
-        blocks = db.scalars(select(Block).where(Block.schedule_enabled.is_(True), Block.is_active.is_(True))).all()
-        for block in blocks:
-            trigger = _parse_cron_5(block.schedule_cron)
-            scheduler.add_job(
-                _run_block_job,
-                trigger=trigger,
-                id=f"block-{block.id}",
-                replace_existing=True,
-                kwargs={"block_id": block.id},
-            )
+        run_block(db, block_id, run_type="scheduled")
+    except Exception:
+        pass
     finally:
         db.close()
 
 
-def _run_block_job(block_id: int) -> None:
+def register_jobs() -> None:
+    scheduler.remove_all_jobs()
     db = SessionLocal()
     try:
-        block = db.get(Block, block_id)
-        if block and block.is_active:
-            execute_block(db, block, run_type="scheduled")
+        blocks = db.scalars(
+            select(ReportBlock).where(ReportBlock.schedule_enabled.is_(True), ReportBlock.is_active.is_(True))
+        ).all()
+        for block in blocks:
+            scheduler.add_job(
+                _run_block_job,
+                trigger=_parse_cron_5(block.schedule_cron),
+                id=f"block-{block.id}",
+                replace_existing=True,
+                kwargs={"block_id": block.id},
+            )
     finally:
         db.close()
 

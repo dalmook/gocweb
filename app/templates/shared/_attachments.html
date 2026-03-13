@@ -1,16 +1,8 @@
-<div class="attachments">
-  <h5>첨부파일</h5>
-  {% if attachments %}
-  <ul class="attachment-list">
-    {% for a in attachments %}
-      <li>
-        <span>{{ a.file_name }}</span>
-        <span class="muted">({{ a.file_size }} bytes)</span>
-        <a class="btn btn-sm" href="/attachments/{{ a.id }}/download">다운로드</a>
-      </li>
-    {% endfor %}
-  </ul>
-  {% else %}
-    <p class="muted">첨부파일 없음</p>
-  {% endif %}
-</div>
+<h4>첨부파일</h4>
+<ul>
+{% for a in attachments %}
+  <li>{{ a.file_name }} ({{ a.file_size }} bytes) <a class="btn btn-sm" href="/attachments/{{ a.id }}/download">다운로드</a></li>
+{% else %}
+  <li>첨부 없음</li>
+{% endfor %}
+</ul>

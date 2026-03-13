@@ -1,48 +1,21 @@
-body { margin: 0; font-family: Arial, sans-serif; background: #f3f5fa; color: #111827; }
+body { margin: 0; font-family: Arial, sans-serif; background: #f4f6fa; }
 .layout { display: flex; min-height: 100vh; }
-.sidebar { width: 220px; background: #111827; color: #fff; padding: 16px; }
-.sidebar a { color: #93c5fd; display: block; margin: 8px 0; text-decoration: none; }
+.sidebar { width: 230px; background: #111827; color: #fff; padding: 16px; }
+.sidebar a { color: #bfdbfe; text-decoration: none; display: block; margin: 8px 0; }
 .content { flex: 1; padding: 20px; }
-
-.card { background: #fff; border: 1px solid #dbe2ef; border-radius: 8px; padding: 14px; margin-bottom: 14px; }
-.page-header { display: flex; justify-content: space-between; gap: 16px; }
-
-input, select, textarea, button { width: 100%; padding: 8px; margin: 4px 0; box-sizing: border-box; font: inherit; }
-button, .btn { background: #2563eb; color: #fff; border: none; border-radius: 6px; padding: 8px 10px; text-decoration: none; display: inline-block; cursor: pointer; }
+.card { background: #fff; border: 1px solid #d1d5db; border-radius: 8px; padding: 12px; margin-bottom: 12px; }
+.stat-grid { display: grid; grid-template-columns: repeat(4, minmax(150px, 1fr)); gap: 10px; }
+.actions-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+input, select, textarea, button { width: 100%; box-sizing: border-box; padding: 8px; margin: 4px 0; }
+textarea { font-family: Consolas, monospace; }
+button, .btn { background: #2563eb; color: #fff; border: none; border-radius: 6px; text-decoration: none; display: inline-block; padding: 8px 10px; width: auto; }
 .btn-secondary { background: #475569; }
-.btn-danger, .btn-danger:hover { background: #dc2626; color: #fff; }
-.btn-sm { width: auto; padding: 4px 8px; font-size: 12px; }
-
-.actions-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.meta-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-.muted { color: #6b7280; font-size: 13px; }
-.notice { border-left: 4px solid #2563eb; }
-
-.badge { padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; text-transform: lowercase; }
-.badge.success { background: #dcfce7; color: #166534; }
-.badge.failed { background: #fee2e2; color: #991b1b; }
-.badge.never-run { background: #e5e7eb; color: #374151; }
-
-.type-badge { padding: 2px 8px; border-radius: 6px; font-size: 12px; color: #fff; }
-.type-python { background: #0284c7; }
-.type-sql { background: #7c3aed; }
-.type-markdown { background: #64748b; }
-
-.block-card .card-head { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
-.block-editor { border-top: 1px dashed #d1d5db; border-bottom: 1px dashed #d1d5db; padding: 10px 0; margin-bottom: 10px; }
-.block-result-wrap .result-box { max-height: 360px; overflow: auto; border: 1px solid #d1d5db; padding: 8px; border-radius: 6px; background: #fff; }
-.summary-line { background: #eff6ff; border-left: 4px solid #2563eb; padding: 6px 10px; }
-
-.error-box { border: 1px solid #ef4444; background: #fff1f2; padding: 8px; margin-top: 8px; }
-pre { white-space: pre-wrap; word-break: break-word; }
-
-.attachments h5 { margin-bottom: 8px; }
-.attachment-list { list-style: none; padding: 0; margin: 0; }
-.attachment-list li { display: flex; gap: 8px; align-items: center; padding: 4px 0; }
-
+.btn-danger { background: #dc2626; }
 .table-wrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; }
-th, td { border: 1px solid #d1d5db; padding: 6px; text-align: left; white-space: nowrap; }
-
-.stat-grid { display: grid; grid-template-columns: repeat(3, minmax(180px, 1fr)); gap: 10px; }
-.filter-grid { display: grid; grid-template-columns: repeat(5, minmax(120px, 1fr)); gap: 8px; }
+th, td { border: 1px solid #d1d5db; padding: 6px; text-align: left; }
+.badge.success { background: #dcfce7; color: #166534; }
+.badge.failed { background: #fee2e2; color: #991b1b; }
+.error-box { border: 1px solid #ef4444; background: #fff1f2; padding: 8px; }
+.result-box { max-height: 320px; overflow: auto; border: 1px solid #d1d5db; padding: 8px; }
+pre { white-space: pre-wrap; word-break: break-word; }

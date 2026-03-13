@@ -1,0 +1,27 @@
+{% extends 'shared/base.html' %}
+{% block content %}
+<h1>실행 이력</h1>
+<div class="card">
+<form method="get" action="/admin/runs" class="actions-row">
+  <select name="status">
+    <option value="" {% if not status %}selected{% endif %}>전체</option>
+    <option value="success" {% if status=='success' %}selected{% endif %}>success</option>
+    <option value="failed" {% if status=='failed' %}selected{% endif %}>failed</option>
+  </select>
+  <input type="number" name="limit" value="{{ limit }}">
+  <button type="submit">조회</button>
+</form>
+</div>
+<div class="card table-wrap">
+<table>
+<thead><tr><th>실행시각</th><th>페이지명</th><th>블록명</th><th>run_type</th><th>status</th><th>duration</th><th>summary</th><th>상세</th></tr></thead>
+<tbody>
+{% for r in runs %}
+<tr>
+  <td>{{ r.started_at }}</td><td>{{ r.page.title }}</td><td>{{ r.block.title }}</td><td>{{ r.run_type }}</td><td>{{ r.status }}</td><td>{{ r.duration_ms }} ms</td><td>{{ r.summary }}</td><td><a class="btn btn-sm" href="/admin/runs/{{ r.id }}">상세</a></td>
+</tr>
+{% else %}<tr><td colspan="8">이력 없음</td></tr>{% endfor %}
+</tbody>
+</table>
+</div>
+{% endblock %}
