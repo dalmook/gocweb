@@ -6,16 +6,8 @@ from datetime import datetime
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.models import (
-    Attachment,
-    BlockSnapshot,
-    Category,
-    PageSnapshot,
-    ReportBlock,
-    ReportPage,
-    RunHistory,
-    SnapshotAttachment,
-)
+from app.models import Attachment, BlockSnapshot, Category, PageSnapshot, ReportBlock, ReportPage, RunHistory, SnapshotAttachment
+from app.services.admin_ops import build_view_sidebar_tree, search_view_pages
 from app.services.renderers import markdown_to_html, run_content_html
 from app.services.run_service import compare_snapshot_with_previous
 
@@ -34,23 +26,27 @@ class ViewBlockResult:
 
 def get_active_categories_for_view(db: Session):
     categories = db.scalars(
-        select(Category).where(Category.is_active.is_(True)).order_by(Category.sort_order.asc(), Category.name.asc())
+        select(Category).where(Category.is_active.is_(True), Category.is_archived.is_(False)).order_by(Category.sort_order.asc(), Category.name.asc())
     ).all()
     counts = dict(
         db.execute(
-            select(ReportPage.category_id, func.count(ReportPage.id)).where(ReportPage.is_active.is_(True)).group_by(ReportPage.category_id)
+            select(ReportPage.category_id, func.count(ReportPage.id))
+            .where(ReportPage.is_active.is_(True), ReportPage.is_archived.is_(False))
+            .group_by(ReportPage.category_id)
         ).all()
     )
     return categories, counts
 
 
 def get_active_pages_for_category(db: Session, category_slug: str):
-    category = db.scalars(select(Category).where(Category.slug == category_slug, Category.is_active.is_(True))).first()
+    category = db.scalars(
+        select(Category).where(Category.slug == category_slug, Category.is_active.is_(True), Category.is_archived.is_(False))
+    ).first()
     if not category:
         return None, []
     pages = db.scalars(
         select(ReportPage)
-        .where(ReportPage.category_id == category.id, ReportPage.is_active.is_(True))
+        .where(ReportPage.category_id == category.id, ReportPage.is_active.is_(True), ReportPage.is_archived.is_(False))
         .order_by(ReportPage.sort_order.asc(), ReportPage.title.asc())
     ).all()
     return category, pages
@@ -60,7 +56,14 @@ def get_page_for_view(db: Session, category_slug: str, page_slug: str):
     return db.scalars(
         select(ReportPage)
         .join(Category, Category.id == ReportPage.category_id)
-        .where(Category.slug == category_slug, Category.is_active.is_(True), ReportPage.slug == page_slug, ReportPage.is_active.is_(True))
+        .where(
+            Category.slug == category_slug,
+            Category.is_active.is_(True),
+            Category.is_archived.is_(False),
+            ReportPage.slug == page_slug,
+            ReportPage.is_active.is_(True),
+            ReportPage.is_archived.is_(False),
+        )
         .limit(1)
     ).first()
 
@@ -108,15 +111,13 @@ def get_latest_page_status(db: Session, page_id: int) -> tuple[str, datetime | N
 
 
 def _short_error(text: str) -> str:
-    if not text:
-        return ""
-    return text.strip().splitlines()[-1][:180]
+    return text.strip().splitlines()[-1][:180] if text else ""
 
 
 def _fallback_block_results(db: Session, page: ReportPage) -> list[ViewBlockResult]:
     results: list[ViewBlockResult] = []
     for block in page.blocks:
-        if not block.is_active:
+        if not block.is_active or block.is_archived:
             continue
         if block.block_type == "markdown":
             results.append(ViewBlockResult(block, None, "안내", "", markdown_to_html(block.source_code_text or ""), "", [], None))
@@ -142,61 +143,35 @@ def _fallback_block_results(db: Session, page: ReportPage) -> list[ViewBlockResu
     return results
 
 
-def build_view_page_context(
-    db: Session,
-    page_id: int,
-    selected_snapshot_id: int | None = None,
-    snapshot_date: str | None = None,
-    history_limit: int = 14,
-):
+def build_view_page_context(db: Session, page_id: int, selected_snapshot_id: int | None = None, snapshot_date: str | None = None, history_limit: int = 14):
     page = db.get(ReportPage, page_id)
     snapshots = get_snapshots_for_page(db, page_id, history_limit)
 
     snapshot = None
     if selected_snapshot_id:
         candidate = get_snapshot_by_id(db, selected_snapshot_id)
-        if candidate and candidate.page_id == page_id:
+        if candidate and candidate.page_id == page_id and candidate.is_published:
             snapshot = candidate
     elif snapshot_date:
         snapshot = get_snapshot_by_date(db, page_id, snapshot_date)
-
     if not snapshot:
         snapshot = snapshots[0] if snapshots else None
 
     block_results: list[ViewBlockResult] = []
     compare_rows = []
-
     if snapshot:
         compare_rows = compare_snapshot_with_previous(db, snapshot.id)
         block_snap_map = {bs.block_id: bs for bs in snapshot.block_snapshots}
-        for block in sorted([b for b in page.blocks if b.is_active], key=lambda x: (x.sort_order, x.id)):
+        for block in sorted([b for b in page.blocks if b.is_active and not b.is_archived], key=lambda x: (x.sort_order, x.id)):
             if block.block_type == "markdown":
-                block_results.append(
-                    ViewBlockResult(block, None, "안내", "", markdown_to_html(block.source_code_text or ""), "", [], None)
-                )
+                block_results.append(ViewBlockResult(block, None, "안내", "", markdown_to_html(block.source_code_text or ""), "", [], None))
                 continue
-
             bs = block_snap_map.get(block.id)
             if not bs:
-                block_results.append(
-                    ViewBlockResult(
-                        block=block,
-                        run=None,
-                        status="no-data",
-                        summary="",
-                        display_html="<p>해당 스냅샷에 결과 없음</p>",
-                        short_error="",
-                        attachments=[],
-                        last_success_at=None,
-                    )
-                )
+                block_results.append(ViewBlockResult(block, None, "no-data", "", "<p>해당 스냅샷에 결과 없음</p>", "", [], None))
                 continue
-
             last_success = db.scalars(
-                select(BlockSnapshot)
-                .where(BlockSnapshot.block_id == block.id, BlockSnapshot.status == "success")
-                .order_by(BlockSnapshot.started_at.desc())
-                .limit(1)
+                select(BlockSnapshot).where(BlockSnapshot.block_id == block.id, BlockSnapshot.status == "success").order_by(BlockSnapshot.started_at.desc()).limit(1)
             ).first()
             content_html = bs.content_html or run_content_html(type("x", (), {"content_html": "", "content_text": bs.content_text})())
             block_results.append(
@@ -223,4 +198,12 @@ def build_view_page_context(
         "page_status": page_status,
         "block_results": block_results,
         "compare_rows": compare_rows,
+    }
+
+
+def build_view_common_context(db: Session, query: str = "") -> dict:
+    return {
+        "sidebar_tree": build_view_sidebar_tree(db),
+        "search_query": query,
+        "search_results": search_view_pages(db, query) if query else [],
     }

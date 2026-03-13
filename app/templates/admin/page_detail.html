@@ -1,61 +1,71 @@
 {% extends 'shared/base.html' %}
+{% set breadcrumb = '대시보드 > 리포트 관리 > ' ~ page.title %}
 {% block content %}
-<h1>{{ page.title }}</h1>
-<p>{{ page.description }}</p>
-<p>카테고리: {{ page.category.name }}</p>
-<p>페이지 스케줄: {% if page.schedule_enabled %}ON ({{ page.schedule_cron }}){% else %}OFF{% endif %}</p>
-{% if message %}<div class="card">{{ message }}</div>{% endif %}
-<div class="actions-row">
-  <form method="post" action="/admin/pages/{{ page.id }}/run">
-    <textarea name="common_params_json" rows="2">{}</textarea>
-    <button type="submit">페이지 전체 실행(공통 파라미터 + 스냅샷)</button>
-  </form>
-  <a class="btn btn-secondary" href="/admin/snapshots/page/{{ page.id }}">페이지 스냅샷</a>
-  <form method="post" action="/admin/pages/{{ page.id }}/clone"><button type="submit">페이지 복제</button></form>
-  <a class="btn btn-secondary" href="/admin/runs">내부 실행 로그</a>
-  <a class="btn btn-secondary" href="/admin/blocks">블록 관리</a>
-</div>
-
-<div class="card">
-  <h3>최근 스냅샷</h3>
-  <ul>
-    {% for s in snapshots %}
-      <li><a href="/admin/snapshots/{{ s.id }}">#{{ s.id }}</a> {{ s.started_at }} / {{ s.status }} / {{ s.summary }}</li>
-    {% else %}
-      <li>스냅샷 없음</li>
-    {% endfor %}
-  </ul>
-</div>
-
-<div class="card">
-  <h3>블록 추가</h3>
-  <form method="post" action="/admin/blocks/create">
-    <input type="hidden" name="page_id" value="{{ page.id }}">
-    <input name="title" placeholder="제목" required>
-    <input name="description" placeholder="설명">
-    <select name="block_type"><option value="markdown">markdown</option><option value="python">python</option><option value="sql">sql</option></select>
-    <textarea name="source_code_text" rows="8"></textarea>
-    <textarea name="config_json" rows="4">{}</textarea>
-    <label><input type="checkbox" name="schedule_enabled" value="true">블록 스케줄 사용(하위 호환)</label>
-    <input name="schedule_cron" value="0 7 * * *">
-    <input name="sort_order" type="number" value="0">
-    <label><input type="checkbox" name="is_active" value="true" checked>활성</label>
-    <button type="submit">추가</button>
-  </form>
-</div>
-
-{% for b in blocks %}
-<div class="card">
-  <h3>{{ b.title }} ({{ b.block_type }})</h3>
-  <p>{{ b.description }}</p>
-  <p>스케줄: {% if b.schedule_enabled %}ON ({{ b.schedule_cron }}){% else %}OFF{% endif %} / 활성: {{ b.is_active }}</p>
-  {% set r = latest_map.get(b.id) %}
-  <p>최신 내부 실행로그: {% if r %}{{ r.started_at }} - {{ r.status }} ({{ r.duration_ms }} ms){% else %}없음{% endif %}</p>
+<div class="topbar"><h1 class="page-title">{{ page.title }}</h1>
   <div class="actions-row">
-    <a class="btn btn-secondary" href="/admin/blocks/{{ b.id }}/edit">수정</a>
-    <form method="post" action="/admin/blocks/{{ b.id }}/run"><textarea name="run_params_json" rows="2">{{ b.default_params_json or "{}" }}</textarea><button type="submit" {% if b.block_type=='markdown' %}disabled{% endif %}>수동 실행</button></form>
-    <form method="post" action="/admin/blocks/{{ b.id }}/clone"><button type="submit">복제</button></form>
+    <form method="post" action="/admin/pages/{{ page.id }}/run"><textarea class="mono" name="common_params_json" rows="2">{}</textarea><button>전체 실행</button></form>
+    <a class="btn btn-secondary" href="/admin/snapshots/page/{{ page.id }}">스냅샷 보기</a>
+    <form method="post" action="/admin/pages/{{ page.id }}/clone"><button class="btn-secondary">복제</button></form>
   </div>
 </div>
-{% endfor %}
+{% if message %}<div class="card">{{ message }}</div>{% endif %}
+<div class="split-2">
+<div class="card">
+  <h3>페이지 정보</h3>
+  <p>{{ page.description }}</p>
+  <p>카테고리: {{ page.category.name }}</p>
+  <p>스케줄: <strong>{{ page_schedule }}</strong></p>
+  <p>Cron: {{ page.schedule_cron or '-' }}</p>
+  <p>
+    {% if page.is_archived %}{% set status='archived' %}{% set label='보관' %}
+    {% elif page.is_active %}{% set status='success' %}{% set label='활성' %}
+    {% else %}{% set status='inactive' %}{% set label='비활성' %}{% endif %}
+    {% include 'shared/_status_badge.html' %}
+  </p>
+</div>
+<div class="card">
+  <h3>설정 수정</h3>
+  <form id="pageScheduleForm" data-schedule-form method="post" action="/admin/pages/{{ page.id }}/update">
+    <input type="hidden" name="category_id" value="{{ page.category_id }}">
+    <input name="title" value="{{ page.title }}" required>
+    <input name="slug" value="{{ page.slug }}" required>
+    <textarea name="description" rows="3">{{ page.description }}</textarea>
+    <input name="sort_order" type="number" value="{{ page.sort_order }}">
+    <label><input type="checkbox" name="is_active" value="true" {% if page.is_active %}checked{% endif %}>활성</label>
+    <label>스케줄 유형</label>
+    <select name="schedule_kind">
+      <option value="none" {% if schedule.kind=='none' %}selected{% endif %}>사용 안 함</option>
+      <option value="daily" {% if schedule.kind=='daily' %}selected{% endif %}>매일</option>
+      <option value="weekly" {% if schedule.kind=='weekly' %}selected{% endif %}>매주</option>
+      <option value="monthly" {% if schedule.kind=='monthly' %}selected{% endif %}>매월</option>
+      <option value="custom" {% if schedule.kind=='custom' %}selected{% endif %}>사용자정의</option>
+    </select>
+    <div data-schedule-kind="daily"><label>실행시간</label><input type="time" name="schedule_time" value="{{ schedule.time }}"></div>
+    <div data-schedule-kind="weekly"><label>실행시간</label><input type="time" name="schedule_time" value="{{ schedule.time }}"><label>요일</label>
+      {% set wd = schedule.weekdays.split(',') if schedule.weekdays else [] %}
+      {% for i,label in [('1','월'),('2','화'),('3','수'),('4','목'),('5','금'),('6','토'),('0','일')] %}<label><input type="checkbox" name="schedule_weekdays" value="{{ i }}" {% if i in wd %}checked{% endif %}>{{ label }}</label>{% endfor %}
+    </div>
+    <div data-schedule-kind="monthly"><label>실행시간</label><input type="time" name="schedule_time" value="{{ schedule.time }}"><label>일자</label><input type="number" name="schedule_month_day" value="{{ schedule.month_day }}" min="1" max="31"></div>
+    <div data-schedule-kind="custom"><label>cron</label><input class="mono" name="schedule_custom_cron" value="{{ schedule.custom_cron }}"></div>
+    <button type="submit">저장</button>
+  </form>
+</div>
+</div>
+<div class="card"><h3>최근 스냅샷</h3><ul>{% for s in snapshots %}<li><a href="/admin/snapshots/{{ s.id }}">#{{ s.id }}</a> {{ s.started_at }} {{ s.status }} {{ s.summary }}</li>{% else %}<li>없음</li>{% endfor %}</ul></div>
+<div class="card"><h3>블록 목록</h3><div class="block-grid">
+{% for b in blocks %}
+<div class="card">
+  <h4>{{ b.title }}</h4><p class="muted">{{ b.description }}</p>
+  <div class="actions-row"><span class="badge badge-{{ b.block_type }}">{{ b.block_type }}</span>{% if b.is_archived %}<span class="badge badge-archived">보관</span>{% endif %}</div>
+  <p>정렬: {{ b.sort_order }} / 활성: {{ b.is_active }}</p>
+  {% set r=latest_map.get(b.id) %}<p>최근 실행: {% if r %}{{ r.started_at }} {{ r.status }}{% else %}없음{% endif %}</p>
+  <div class="actions-row">
+    <a class="btn btn-secondary" href="/admin/blocks/{{ b.id }}/edit">수정</a>
+    <form method="post" action="/admin/blocks/{{ b.id }}/run"><button {% if b.block_type=='markdown' %}disabled{% endif %}>실행</button></form>
+    <form method="post" action="/admin/blocks/{{ b.id }}/clone"><button class="btn-secondary">복제</button></form>
+    <form method="post" action="/admin/blocks/{{ b.id }}/delete"><button class="btn-warning">보관/삭제</button></form>
+  </div>
+</div>{% endfor %}
+</div></div>
+<script src="/static/js/admin_schedule_builder.js"></script>
 {% endblock %}

@@ -1,37 +1,44 @@
 {% extends 'shared/base.html' %}
+{% set breadcrumb = '대시보드 > 리포트 관리' %}
 {% block content %}
-<h1>리포트 페이지 관리</h1>
-<a class="btn" href="/admin/pages/new">새 페이지(템플릿)</a>
+<div class="topbar"><h1 class="page-title">리포트 관리</h1><a class="btn" href="/admin/pages/new">새 페이지</a></div>
+{% if message %}<div class="card">{{ message }}</div>{% endif %}
 <div class="card">
-<form method="post" action="/admin/pages/create">
-  <select name="category_id">{% for c in categories %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</select>
-  <input name="title" placeholder="제목" required>
-  <input name="slug" placeholder="slug" required>
-  <input name="description" placeholder="설명">
-  <input name="sort_order" type="number" value="0">
-  <label><input type="checkbox" name="schedule_enabled" value="true">페이지 스케줄 사용</label>
-  <input name="schedule_cron" value="0 7 * * *">
-  <label><input type="checkbox" name="is_active" value="true" checked>활성</label>
-  <button type="submit">생성</button>
+<form class="toolbar" method="get">
+  <input name="q" value="{{ filters.q }}" placeholder="제목/설명/slug 검색">
+  <select name="category_id"><option value="">카테고리 전체</option>{% for c in categories %}<option value="{{ c.id }}" {% if filters.category_id==c.id %}selected{% endif %}>{{ c.name }}</option>{% endfor %}</select>
+  <select name="active"><option value="all">활성 전체</option><option value="active" {% if filters.active=='active' %}selected{% endif %}>활성</option><option value="inactive" {% if filters.active=='inactive' %}selected{% endif %}>비활성</option></select>
+  <select name="schedule"><option value="all">스케줄 전체</option><option value="on" {% if filters.schedule=='on' %}selected{% endif %}>스케줄 사용</option><option value="off" {% if filters.schedule=='off' %}selected{% endif %}>미사용</option></select>
+  <select name="has_snapshot"><option value="all">게시본 전체</option><option value="yes" {% if filters.has_snapshot=='yes' %}selected{% endif %}>게시본 있음</option><option value="no" {% if filters.has_snapshot=='no' %}selected{% endif %}>게시본 없음</option></select>
+  <label><input type="checkbox" name="show_archived" value="true" {% if filters.show_archived %}checked{% endif %}> 보관 포함</label>
+  <button type="submit">검색</button>
 </form>
 </div>
+<div class="card table-wrap">
+<table class="table">
+<thead><tr><th>제목</th><th>카테고리</th><th>블록수</th><th>스케줄</th><th>최근 실행</th><th>최근 게시</th><th>상태</th><th>빠른 작업</th></tr></thead>
+<tbody>
 {% for p in pages %}
-<div class="card">
-  <form method="post" action="/admin/pages/{{ p.id }}/update">
-    <select name="category_id">{% for c in categories %}<option value="{{ c.id }}" {% if c.id==p.category_id %}selected{% endif %}>{{ c.name }}</option>{% endfor %}</select>
-    <input name="title" value="{{ p.title }}">
-    <input name="slug" value="{{ p.slug }}">
-    <input name="description" value="{{ p.description }}">
-    <input name="sort_order" type="number" value="{{ p.sort_order }}">
-    <label><input type="checkbox" name="schedule_enabled" value="true" {% if p.schedule_enabled %}checked{% endif %}>페이지 스케줄 사용</label>
-    <input name="schedule_cron" value="{{ p.schedule_cron or '0 7 * * *' }}">
-    <label><input type="checkbox" name="is_active" value="true" {% if p.is_active %}checked{% endif %}>활성</label>
-    <p>블록 수: {{ block_counts.get(p.id, 0) }}</p>
-    <button type="submit">저장</button>
-  </form>
-  <a class="btn btn-secondary" href="/admin/pages/{{ p.id }}">상세 보기</a>
-  <a class="btn btn-secondary" href="/admin/snapshots/page/{{ p.id }}">스냅샷 목록</a>
-  <form method="post" action="/admin/pages/{{ p.id }}/delete"><button class="btn-danger" type="submit">삭제</button></form>
-</div>
-{% endfor %}
+<tr>
+<td><a href="/admin/pages/{{ p.id }}">{{ p.title }}</a><div class="muted">{{ p.slug }}</div></td>
+<td>{{ p.category.name }}</td>
+<td>{{ block_counts.get(p.id, 0) }}</td>
+<td>{{ schedule_labels.get(p.id, '사용 안 함') }}</td>
+<td>{{ latest_runs.get(p.id) or '-' }}</td>
+<td>{{ latest_published.get(p.id) or '-' }}</td>
+<td>
+{% if p.is_archived %}{% set status='archived' %}{% set label='보관' %}
+{% elif p.is_active %}{% set status='success' %}{% set label='활성' %}
+{% else %}{% set status='inactive' %}{% set label='비활성' %}{% endif %}
+{% include 'shared/_status_badge.html' %}
+</td>
+<td class="actions-row">
+<a class="btn btn-secondary" href="/admin/pages/{{ p.id }}">상세</a>
+<form method="post" action="/admin/pages/{{ p.id }}/run"><button>실행</button></form>
+<a class="btn btn-secondary" href="/admin/snapshots/page/{{ p.id }}">스냅샷</a>
+<form method="post" action="/admin/pages/{{ p.id }}/delete"><button class="btn-warning">보관/삭제</button></form>
+</td>
+</tr>
+{% else %}<tr><td colspan="8">검색 결과가 없습니다.</td></tr>{% endfor %}
+</tbody></table></div>
 {% endblock %}

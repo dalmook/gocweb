@@ -13,7 +13,12 @@ class TimestampMixin:
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
-class Category(Base, TimestampMixin):
+class ArchiveMixin:
+    is_archived: Mapped[bool] = mapped_column(Boolean, default=False)
+    archived_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+
+class Category(Base, TimestampMixin, ArchiveMixin):
     __tablename__ = "categories"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -25,7 +30,7 @@ class Category(Base, TimestampMixin):
     pages: Mapped[list["ReportPage"]] = relationship("ReportPage", back_populates="category", cascade="all, delete-orphan")
 
 
-class ReportPage(Base, TimestampMixin):
+class ReportPage(Base, TimestampMixin, ArchiveMixin):
     __tablename__ = "report_pages"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -37,6 +42,8 @@ class ReportPage(Base, TimestampMixin):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     schedule_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
     schedule_cron: Mapped[str] = mapped_column(String(50), default="")
+    schedule_kind: Mapped[str] = mapped_column(String(20), default="none")
+    schedule_meta_json: Mapped[str] = mapped_column(Text, default="{}")
 
     category: Mapped[Category] = relationship("Category", back_populates="pages")
     blocks: Mapped[list["ReportBlock"]] = relationship("ReportBlock", back_populates="page", cascade="all, delete-orphan")
@@ -44,7 +51,7 @@ class ReportPage(Base, TimestampMixin):
     snapshots: Mapped[list["PageSnapshot"]] = relationship("PageSnapshot", back_populates="page", cascade="all, delete-orphan")
 
 
-class ReportBlock(Base, TimestampMixin):
+class ReportBlock(Base, TimestampMixin, ArchiveMixin):
     __tablename__ = "report_blocks"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)

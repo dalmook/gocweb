@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import declarative_base, sessionmaker
 
@@ -35,13 +36,23 @@ def get_db():
 
 def ensure_sqlite_compat_columns() -> None:
     alter_candidates = {
+        "categories": [
+            ("is_archived", "ALTER TABLE categories ADD COLUMN is_archived BOOLEAN DEFAULT 0"),
+            ("archived_at", "ALTER TABLE categories ADD COLUMN archived_at DATETIME"),
+        ],
         "report_pages": [
             ("schedule_enabled", "ALTER TABLE report_pages ADD COLUMN schedule_enabled BOOLEAN DEFAULT 0"),
             ("schedule_cron", "ALTER TABLE report_pages ADD COLUMN schedule_cron VARCHAR(50) DEFAULT ''"),
+            ("is_archived", "ALTER TABLE report_pages ADD COLUMN is_archived BOOLEAN DEFAULT 0"),
+            ("archived_at", "ALTER TABLE report_pages ADD COLUMN archived_at DATETIME"),
+            ("schedule_kind", "ALTER TABLE report_pages ADD COLUMN schedule_kind VARCHAR(20) DEFAULT 'none'"),
+            ("schedule_meta_json", "ALTER TABLE report_pages ADD COLUMN schedule_meta_json TEXT DEFAULT '{}'"),
         ],
         "report_blocks": [
             ("params_schema_json", "ALTER TABLE report_blocks ADD COLUMN params_schema_json TEXT DEFAULT '[]'"),
             ("default_params_json", "ALTER TABLE report_blocks ADD COLUMN default_params_json TEXT DEFAULT '{}'"),
+            ("is_archived", "ALTER TABLE report_blocks ADD COLUMN is_archived BOOLEAN DEFAULT 0"),
+            ("archived_at", "ALTER TABLE report_blocks ADD COLUMN archived_at DATETIME"),
         ],
         "page_snapshots": [
             ("run_params_json", "ALTER TABLE page_snapshots ADD COLUMN run_params_json TEXT DEFAULT '{}'"),

@@ -148,7 +148,7 @@ def run_page_and_create_snapshot(
 
     blocks = db.scalars(
         select(ReportBlock)
-        .where(ReportBlock.page_id == page_id, ReportBlock.is_active.is_(True))
+        .where(ReportBlock.page_id == page_id, ReportBlock.is_active.is_(True), ReportBlock.is_archived.is_(False))
         .order_by(ReportBlock.sort_order.asc(), ReportBlock.id.asc())
     ).all()
     exec_blocks = [b for b in blocks if b.block_type in {"python", "sql"}]
@@ -300,6 +300,6 @@ def count_entities(db: Session) -> dict:
         "categories": db.scalar(select(func.count()).select_from(Category)) or 0,
         "pages": db.scalar(select(func.count()).select_from(ReportPage)) or 0,
         "blocks": db.scalar(select(func.count()).select_from(ReportBlock)) or 0,
-        "scheduled_blocks": db.scalar(select(func.count()).select_from(ReportBlock).where(ReportBlock.schedule_enabled.is_(True), ReportBlock.is_active.is_(True))) or 0,
-        "scheduled_pages": db.scalar(select(func.count()).select_from(ReportPage).where(ReportPage.schedule_enabled.is_(True), ReportPage.is_active.is_(True))) or 0,
+        "scheduled_blocks": db.scalar(select(func.count()).select_from(ReportBlock).where(ReportBlock.schedule_enabled.is_(True), ReportBlock.is_active.is_(True), ReportBlock.is_archived.is_(False))) or 0,
+        "scheduled_pages": db.scalar(select(func.count()).select_from(ReportPage).where(ReportPage.schedule_enabled.is_(True), ReportPage.is_active.is_(True), ReportPage.is_archived.is_(False))) or 0,
     }

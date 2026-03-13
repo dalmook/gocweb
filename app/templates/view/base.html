@@ -5,16 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ title or '리포트 조회 포털' }}</title>
   <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/css/view.css">
 </head>
 <body>
-<div class="view-wrap">
-  <header class="view-header">
-    <h1><a href="/view">리포트 조회 포털</a></h1>
-    <p>저장된 실행 결과를 조회하는 읽기 전용 화면</p>
-  </header>
-  <main class="view-content">
-    {% block content %}{% endblock %}
-  </main>
+<div class="view-shell">
+  {% include 'view/_sidebar.html' %}
+  <main class="view-main">{% block content %}{% endblock %}</main>
 </div>
 </body>
 </html>

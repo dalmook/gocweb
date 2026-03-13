@@ -44,7 +44,7 @@ def register_jobs() -> None:
     db = SessionLocal()
     try:
         pages = db.scalars(
-            select(ReportPage).where(ReportPage.schedule_enabled.is_(True), ReportPage.is_active.is_(True))
+            select(ReportPage).where(ReportPage.schedule_enabled.is_(True), ReportPage.is_active.is_(True), ReportPage.is_archived.is_(False))
         ).all()
         for p in pages:
             scheduler.add_job(
@@ -57,7 +57,7 @@ def register_jobs() -> None:
 
         # backward compatibility for block schedule
         blocks = db.scalars(
-            select(ReportBlock).where(ReportBlock.schedule_enabled.is_(True), ReportBlock.is_active.is_(True))
+            select(ReportBlock).where(ReportBlock.schedule_enabled.is_(True), ReportBlock.is_active.is_(True), ReportBlock.is_archived.is_(False))
         ).all()
         for block in blocks:
             scheduler.add_job(
